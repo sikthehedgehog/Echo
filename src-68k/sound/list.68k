@@ -1,0 +1,85 @@
+;****************************************************************************
+; PointerList
+; Pointer list used by Echo
+;****************************************************************************
+
+PointerList:
+    Echo_ListEntry Instr_PSGFlat        ; $00 [PSG] Flat PSG instrument
+    Echo_ListEntry Instr_DGuitar        ; $01 [FM] Distortion guitar
+    Echo_ListEntry Instr_Snare          ; $02 [PCM] Snare drum
+    Echo_ListEntry Instr_Kick           ; $03 [PCM] Bass drum (kick)
+    Echo_ListEntry Instr_Strings        ; $04 [FM] String ensemble
+    Echo_ListEntry Instr_Bass           ; $05 [FM] Standard bass
+    Echo_ListEntry Instr_SoftPSG        ; $06 [PSG] Soft PSG envelope
+    Echo_ListEntry Instr_PianoPSG       ; $07 [PSG] Piano PSG instrument
+    Echo_ListEnd
+
+;****************************************************************************
+; Instrument $00 [PSG]
+; Flat PSG instrument (no envelope)
+;****************************************************************************
+
+Instr_PSGFlat:
+    dc.b    $FE,$00,$FF
+
+;****************************************************************************
+; Instrument $01 [FM]
+; Distortion guitar
+;****************************************************************************
+
+Instr_DGuitar:
+    incbin  "data/fm/dguitar.eif"
+
+;****************************************************************************
+; Instrument $02 [PCM]
+; Snare drum
+;****************************************************************************
+
+Instr_Snare:
+    incbin  "data/pcm/snare.ewf"
+
+;****************************************************************************
+; Instrument $03 [PCM]
+; Bass drum
+;****************************************************************************
+
+Instr_Kick:
+    incbin  "data/pcm/kick.ewf"
+
+;****************************************************************************
+; Instrument $04 [FM]
+; String ensemble
+;****************************************************************************
+
+Instr_Strings:
+    incbin  "data/fm/string.eif"
+
+;****************************************************************************
+; Instrument $05 [FM]
+; Standard bass
+;****************************************************************************
+
+Instr_Bass:
+    incbin  "data/fm/bass.eif"
+
+;****************************************************************************
+; Instrument $06 [PSG]
+; "Soft" PSG envelope
+;****************************************************************************
+
+Instr_SoftPSG:
+    dc.b    $00,$01,$01,$02,$02,$02,$03,$03,$03,$03,$FE,$04,$FF
+
+;****************************************************************************
+; Instrument $07 [PSG]
+; Piano-like PSG instrument
+;****************************************************************************
+
+Instr_PianoPSG:
+    dc.b    $00,$01,$02,$03,$04,$04,$05,$05
+    dc.b    $06,$06,$07,$07,$08,$08,$08,$08
+    dc.b    $09,$09,$09,$09,$0A,$0A,$0A,$0A
+    dc.b    $0B,$0B,$0B,$0B,$0C,$0C,$0C,$0C
+    dc.b    $0C,$0C,$0C,$0C,$0D,$0D,$0D,$0D
+    dc.b    $0D,$0D,$0D,$0D,$0E,$0E,$0E,$0E
+    dc.b    $0E,$0E,$0E,$0E,$FE,$0F,$FF

@@ -1,0 +1,12 @@
+;****************************************************************************
+; Where program variables are defined
+;****************************************************************************
+
+    rsset $FF0000
+
+RAM_JoyHold         rs.b 1      ; Current "held" joypad status
+RAM_JoyPress        rs.b 1      ; Current "pressed" joypad status
+RAM_LArrowAnim      rs.w 1      ; Animation for left arrow
+RAM_RArrowAnim      rs.w 1      ; Animation for right arrow
+RAM_BGAnim          rs.w 1      ; Animation for background
+RAM_CurrSong        rs.w 1      ; Selected song

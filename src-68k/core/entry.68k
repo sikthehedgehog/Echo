@@ -1,0 +1,170 @@
+;****************************************************************************
+; EntryPoint
+; Where the program starts
+;****************************************************************************
+
+EntryPoint:
+    move.w  #$2700, sr              ; Disable interrupts
+
+    move.b  ($A10001), d0           ; Disable TMSS if needed
+    and.b   #$0F, d0
+    beq.s   @NoTMSS
+    move.l  #"SEGA", ($A14000)
+@NoTMSS:
+
+    bsr     InitJoypad              ; Init joypad
+
+    lea     ($C00004), a0           ; Init VDP
+    move.w  #$8004, (a0)              ; No IRQ4, no HV latch
+    move.w  #$8114, (a0)              ; Disable display
+    move.w  #$8230, (a0)              ; Scroll A: $C000
+    move.w  #$8407, (a0)              ; Scroll B: $E000
+    move.w  #$8578, (a0)              ; Sprites: $F000
+    move.w  #$8700, (a0)              ; Background: pal 0, color 0
+    move.w  #$8B00, (a0)              ; No IRQ2, full scroll
+    move.w  #$8C81, (a0)              ; H40, no S/H, no interlace
+    move.w  #$8D3E, (a0)              ; HScroll: $F800
+    move.w  #$8F02, (a0)              ; Autoincrement: 2 bytes
+    move.w  #$9001, (a0)              ; Scroll size: 64x32
+    move.w  #$9100, (a0)              ; Hide window plane
+    move.w  #$9200, (a0)              ;  "     "      "
+
+    moveq   #0, d0                  ; Clear VRAM
+    move.l  #$40000000, (a0)
+    lea     ($C00000), a1
+    move.w  #$800-1, d1
+@ClearVRAM:
+    move.l  d0, (a1)
+    move.l  d0, (a1)
+    move.l  d0, (a1)
+    move.l  d0, (a1)
+    move.l  d0, (a1)
+    move.l  d0, (a1)
+    move.l  d0, (a1)
+    move.l  d0, (a1)
+    dbf     d1, @ClearVRAM
+
+    move.l  #$C0000000, (a0)        ; Clear CRAM
+    moveq   #8-1, d1
+@ClearCRAM:
+    move.l  d0, (a1)
+    move.l  d0, (a1)
+    move.l  d0, (a1)
+    move.l  d0, (a1)
+    dbf     d1, @ClearCRAM
+
+    move.l  #$40000010, (a0)        ; Clear VSRAM
+    move.l  d0, (a1)
+
+    lea     (PointerList), a0       ; Initialize Echo
+    bsr     Echo_Init
+
+    bsr     LoadFont                ; Load font
+
+    lea     ($C00004), a0           ; Load palette
+    lea     ($C00000), a1
+    move.l  #$C0020000, (a0)
+    move.l  #$066600CE, (a1)
+    move.l  #$000E000E, (a1)
+    move.l  #$C0220000, (a0)
+    move.l  #$06660EEE, (a1)
+    move.l  #$000E000E, (a1)
+    move.l  #$C0420000, (a0)
+    move.l  #$04440E88, (a1)
+    move.l  #$C0620000, (a0)
+    move.l  #$04440888, (a1)
+
+    move.l  #$C00A0000, (a0)
+    move.l  #$02220444, (a1)
+    move.l  #$02240024, (a1)
+    move.l  #$02440020, (a1)
+    move.w  #$0040, (a1)
+
+    move.l  #$58000000, (a0)        ; Load graphics
+    lea     (@Gfx_Arrows), a2
+    moveq   #12-1, d7
+@LoadGfx:
+    move.l  (a2)+, (a1)
+    move.l  (a2)+, (a1)
+    move.l  (a2)+, (a1)
+    move.l  (a2)+, (a1)
+    move.l  (a2)+, (a1)
+    move.l  (a2)+, (a1)
+    move.l  (a2)+, (a1)
+    move.l  (a2)+, (a1)
+    dbf     d7, @LoadGfx
+
+    move.l  #$44880003, (a0)        ; Write left arrow
+    move.l  #$00C000C1, (a1)
+    move.l  #$45080003, (a0)
+    move.l  #$00C200C3, (a1)
+
+    move.l  #$44C40003, (a0)        ; Write right arrow
+    move.l  #$28C128C0, (a1)
+    move.l  #$45440003, (a0)
+    move.l  #$28C328C2, (a1)
+
+    moveq   #2, d0                  ; Write title
+    moveq   #1, d1
+    move.w  #$8000, d2
+    lea     (@Str_Title1), a0
+    bsr     WriteString
+    addq.w  #2, d1
+    move.w  #$E000, d2
+    lea     (@Str_Title2), a0
+    bsr     WriteString
+
+    moveq   #20-(24/2), d0          ; Write instructions
+    moveq   #23, d1
+    lea     (@Str_Instr1), a0
+    bsr     WriteString
+    moveq   #20-(18/2), d0
+    addq.w  #2, d1
+    lea     (@Str_Instr2), a0
+    bsr     WriteString
+
+    bsr     DrawBG                  ; Draw background
+
+    move.w  #$8154, ($C00004)       ; Enable display
+    bra     MainMenu                ; Go into the main menu
+
+;****************************************************************************
+
+@Gfx_Arrows:
+    dc.l    $00000000, $00000000, $00000000, $00000000
+    dc.l    $00000034, $00004343, $00343434, $43434343
+    dc.l    $00000034, $00004343, $00343434, $43434343
+    dc.l    $34343434, $43434343, $34343434, $43434343
+    dc.l    $34343434, $00434343, $00003434, $00000043
+    dc.l    $00000000, $00000000, $00000000, $00000000
+    dc.l    $34343434, $43434343, $34343434, $43434343
+    dc.l    $34343434, $00434343, $00003434, $00000043
+
+@Gfx_BG:
+    dc.l    $55555555, $55555555, $55555555, $55555555
+    dc.l    $55555555, $55555555, $55555555, $55555555
+    dc.l    $00000000, $00000000, $00000000, $00000000
+    dc.l    $00000000, $00000000, $00000000, $00000000
+    dc.l    $66666666, $66666666, $66666666, $66666666
+    dc.l    $66666666, $66666666, $66666666, $66666666
+
+    dc.l    $78787878, $87878787, $78787878, $87878787
+    dc.l    $78787878, $87878787, $78787878, $87878787
+    dc.l    $79797979, $97979797, $79797979, $97979797
+    dc.l    $79797979, $97979797, $79797979, $97979797
+
+    dc.l    $AAAAAAAA, $AAAAAAAA, $AAAAAAAA, $AAAAAAAA
+    dc.l    $AAAAAAAA, $AAAAAAAA, $AAAAAAAA, $AAAAAAAA
+    dc.l    $BABABABA, $ABABABAB, $BABABABA, $ABABABAB
+    dc.l    $BABABABA, $ABABABAB, $BABABABA, $ABABABAB
+
+    dc.l    $56565656, $65656565, $56565656, $65656565
+    dc.l    $56565656, $65656565, $56565656, $65656565
+
+                        ; 123456789012345678901234567890123456
+
+@Str_Title1:        dc.b "Echo sound engine", 0
+@Str_Title2:        dc.b "Version 0.8 by Sik", 0
+@Str_Instr1:        dc.b "Use D-pad to select song", 0
+@Str_Instr2:        dc.b "A/C: play, B: stop", 0
+    even

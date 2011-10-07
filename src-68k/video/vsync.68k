@@ -1,0 +1,19 @@
+;****************************************************************************
+; VSync
+; Waits until the next frame
+;****************************************************************************
+
+VSync:
+    lea     ($C00004), a6
+
+@Loop1:                             ; Wait until current VBlank is over
+    move.w  (a6), d7
+    btst.l  #3, d7
+    bne.s   @Loop1
+
+@Loop2:                             ; Wait until next VBlank starts
+    move.w  (a6), d7
+    btst.l  #3, d7
+    beq.s   @Loop2
+
+    rts                             ; End of subroutine

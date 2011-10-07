@@ -1,0 +1,43 @@
+;****************************************************************************
+; DrawBG
+; Draws the background
+;****************************************************************************
+
+DrawBG:
+    lea     ($C00004), a2
+    lea     ($C00000), a1
+
+    lea     (@BGData), a0
+    move.l  #$60000003, d0
+    moveq   #28-1, d6
+@YLoop:
+    move.l  d0, (a2)
+    moveq   #40-1, d7
+@XLoop:
+    move.w  (a0)+, (a1)
+    dbf     d7, @XLoop
+    add.l   #$00800000, d0
+    dbf     d6, @YLoop
+
+    lea     (@BGData), a0
+    move.l  #$60000002, d0
+    moveq   #28-1, d6
+@YLoop2:
+    move.l  d0, (a2)
+    moveq   #40-1, d7
+@XLoop2:
+    move.w  (a0)+, d1
+    bset.l  #11, d1
+    move.w  d1, (a1)
+    dbf     d7, @XLoop2
+    add.l   #$00800000, d0
+    dbf     d6, @YLoop2
+
+    rts                             ; End of subroutine
+
+;****************************************************************************
+; Background data
+;****************************************************************************
+
+@BGData:
+    incbin  "data/bg.bin"

@@ -1,0 +1,141 @@
+;****************************************************************************
+; MainMenu
+; Menu where you get to select the song and such
+; The main screen, bah...
+;****************************************************************************
+
+MainMenu:
+    move.w  #0, (RAM_CurrSong)      ; Selected song
+    bsr     UpdateMenu              ; Show description of first song
+
+    move.l  #0, (RAM_LArrowAnim)    ; Reset arrows anim
+    move.w  #$8407, (RAM_BGAnim)    ; Reset background anim
+
+@MainLoop:
+    move.b  (RAM_JoyPress), d0      ; Get joypad input
+
+    btst.l  #2, d0                  ; Previous song?
+    beq.s   @NoLeft
+
+    move.w  (RAM_CurrSong), d7        ; Select previous song
+    bne.s   @NotTooLeft
+    move.w  #NumSongs, d7
+@NotTooLeft:
+    subq.w  #1, d7
+    move.w  d7, (RAM_CurrSong)
+
+    bsr     UpdateMenu                ; Update current song
+    move.w  #28, (RAM_LArrowAnim)     ; Animate left arrow
+    lea     (SFX_Beep), a0            ; Beep!
+    bsr     Echo_PlaySFX
+@NoLeft:
+
+    btst.l  #3, d0                  ; Next song?
+    beq.s   @NoRight
+
+    move.w  (RAM_CurrSong), d7        ; Select next song
+    addq.w  #1, d7
+    cmp.w   #NumSongs, d7
+    blt.s   @NotTooRight
+    moveq   #0, d7
+@NotTooRight:
+    move.w  d7, (RAM_CurrSong)
+    bsr     UpdateMenu                ; Update current song
+
+    move.w  #28, (RAM_RArrowAnim)     ; Animate right arrow
+    lea     (SFX_Beep), a0            ; Beep!
+    bsr     Echo_PlaySFX
+@NoRight:
+
+    btst.l  #5, d0                  ; Play song?
+    bne.s   @DoPlay
+    btst.l  #6, d0
+    beq.s   @NoPlay
+@DoPlay:
+    lea     (SongList), a1            ; Get song address
+    move.w  (RAM_CurrSong), d7
+    lsl.w   #4, d7
+    lea     (a1,d7.w), a1
+    move.l  (a1), a0
+    bsr     Echo_PlayBGM              ; Play song
+@NoPlay:
+
+    btst.l  #4, d0                  ; Stop song?
+    beq.s   @NoStop
+    bsr     Echo_StopBGM
+@NoStop:
+
+    btst.l  #7, d0                  ; Debug key
+    beq.s   @NoDebug
+    lea     (BGM_Test), a0            ; Play test BGM
+    ;bsr     Echo_PlayBGM
+    lea     (SFX_Test), a0            ; Play test SFX
+    bsr     Echo_PlaySFX
+@NoDebug:
+
+    lea     (@ArrowPal), a0
+
+    move.w  (RAM_LArrowAnim), d0    ; Animate left arrow
+    move.l  (a0,d0.w), d1
+    move.l  #$C0060000, ($C00004)
+    move.l  d1, ($C00000)
+    subq.w  #2, d0
+    bge.s   @NoLArrowOver
+    moveq   #0, d0
+@NoLArrowOver:
+    move.w  d0, (RAM_LArrowAnim)
+
+    move.w  (RAM_RArrowAnim), d0    ; Animate right arrow
+    move.l  (a0,d0.w), d1
+    move.l  #$C0260000, ($C00004)
+    move.l  d1, ($C00000)
+    subq.w  #2, d0
+    bge.s   @NoRArrowOver
+    moveq   #0, d0
+@NoRArrowOver:
+    move.w  d0, (RAM_RArrowAnim)
+
+    move.w  (RAM_BGAnim), d0        ; Animate background
+    bchg.l  #1, d0
+    move.w  d0, (RAM_BGAnim)
+    move.w  d0, ($C00004)
+
+    bsr     VSync                   ; Next frame
+    bsr     ReadJoypad
+    bra     @MainLoop
+
+;****************************************************************************
+
+@ArrowPal:
+    dc.w    $00E, $00E, $02E, $02E, $04E, $04E, $06E, $06E
+    dc.w    $28E, $28E, $4AE, $4AE, $6CE, $6CE, $8EE, $8EE
+
+;****************************************************************************
+; UpdateMenu
+; Shows the current option on screen
+;****************************************************************************
+
+UpdateMenu:
+    bsr     ClearLines              ; Clear lines
+
+    lea     (SongList), a1          ; Get address of song data
+    move.w  (RAM_CurrSong), d0
+    lsl.w   #4, d0
+    lea     (a1,d0.w), a1
+    addq.l  #4, a1
+
+    moveq   #7, d0                  ; Write song title
+    moveq   #9, d1
+    move.w  #$A000, d2
+    move.l  (a1)+, a0
+    bsr     WriteString
+
+    addq.w  #2, d1                  ; Write song description
+    move.w  #$C000, d2
+    move.l  (a1)+, a0
+    bsr     WriteString
+    addq.w  #2, d1
+    move.l  (a1)+, a0
+    bsr     WriteString
+
+    rts                             ; End of subroutine

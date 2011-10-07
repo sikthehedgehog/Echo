@@ -1,0 +1,43 @@
+;****************************************************************************
+; InitJoypad
+; Initializes the joypad
+;****************************************************************************
+
+InitJoypad:
+    move.b  #$40, ($A10009)         ; Initialize I/O ports
+    move.b  #$40, ($A10003)
+    move.w  #0, (RAM_JoyHold)       ; Initialize status
+    rts                             ; End of subroutine
+
+;****************************************************************************
+; ReadJoypad
+; Reads the joypad status
+;****************************************************************************
+
+ReadJoypad:
+    lea     ($A10003), a6           ; I/O data port
+
+    move.b  #$40, (a6)              ; Read D-pad, B and C
+    nop
+    nop
+    move.b  (a6), d7
+    move.b  #$00, (a6)              ; Read A and Start
+    nop
+    nop
+    move.b  (a6), d6
+
+    and.b   #$3F, d7                ; Process input
+    and.b   #$30, d6
+    add.b   d6, d6
+    add.b   d6, d6
+    or.b    d6, d7
+    not.b   d7
+
+    lea     (RAM_JoyHold), a6       ; Store new joypad status
+    move.b  (a6), d6
+    move.b  d7, (a6)+
+    not.b   d6
+    and.b   d6, d7
+    move.b  d7, (a6)
+
+    rts                             ; End of subroutine

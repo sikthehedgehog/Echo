@@ -1,0 +1,28 @@
+;****************************************************************************
+; SongList
+; List of songs that appear on the menu
+;****************************************************************************
+
+SongList:
+    dc.l    BGM_Minion, @Str_Minion_1, @Str_Minion_2, @Str_Minion_3
+    dc.l    BGM_HoL, @Str_HoL_1, @Str_Null, @Str_Null
+
+                       ; 012345678901234567890123456
+
+@Str_Null:          dc.b 0
+@Str_Untitled:      dc.b "[untitled]", 0
+
+@Str_Minion_1:      dc.b "Evil's Minion", 0
+@Str_Minion_2:      dc.b "My distortion guitar is", 0
+@Str_Minion_3:      dc.b "better than Tiido's B)", 0
+
+@Str_HoL_1:         dc.b "Hall of Loneliness", 0
+
+    even
+
+;****************************************************************************
+; NumSongs
+; Number of songs in song list
+;****************************************************************************
+
+NumSongs equ 2

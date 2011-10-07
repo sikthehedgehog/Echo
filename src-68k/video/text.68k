@@ -1,0 +1,108 @@
+;****************************************************************************
+; LoadFont
+; Loads the font in VRAM
+;****************************************************************************
+
+LoadFont:
+    move.l  #$40000000, ($C00004)   ; Where font will be stored
+
+    lea     (@Font), a0             ; Font data
+    lea     ($C00000), a1           ; VDP data port
+    move.w  #96*16-1, d7            ; Go through all lines
+@Loop:
+
+    move.b  (a0)+, d0               ; Fetch next line
+    moveq   #0, d1                  ; Initial color
+    moveq   #8-1, d6                ; Go through all pixels
+@ILoop:
+
+    add.b   d0, d0                  ; Get pixel color
+    bcc.s   @Transparent
+    moveq   #3, d1
+@Transparent:
+    subq.b  #1, d1
+    bgt.s   @NoUnderflow
+    moveq   #0, d1
+@NoUnderflow:
+
+    lsl.l   #4, d2                  ; Make room for pixel
+    or.b    d1, d2                  ; Store pixel
+    dbf     d6, @ILoop              ; Next pixel
+
+    move.l  d2, (a1)                ; Store line in VRAM
+    dbf     d7, @Loop               ; Next line
+
+    rts                             ; End of subroutine
+
+@Font:
+    incbin "data/font.bin"
+
+;****************************************************************************
+; WriteString
+; Writes a string on screen
+;
+; input d0.w ... X coordinate
+; input d1.w ... Y coordinate
+; input d2.w ... FX and such
+; input a0.l ... String
+;****************************************************************************
+
+WriteString:
+    movem.l d0-d2, -(sp)            ; Save registers
+
+    lsl.w   #6, d1                  ; Calculate address
+    add.w   d1, d0
+    add.w   d0, d0
+
+    and.l   #$FFFF, d0              ; Tell VDP the address
+    or.l    #$00034000, d0
+    swap    d0
+    move.l  d0, ($C00004)
+
+    lea     ($C00000), a5           ; VDP data port
+    moveq   #2-1, d7                ; Go through both lines
+@Loop:
+
+    move.l  a0, a6
+@ILoop:
+    move.b  (a6)+, d1               ; Get next character
+    beq.s   @End                    ; End of string?
+
+    sub.b   #$20, d1                ; Write tile in VRAM
+    and.w   #$7F, d1
+    add.w   d1, d1
+    add.w   d2, d1
+    move.w  d1, (a5)
+
+    bra.s   @ILoop                  ; Next character
+
+@End:
+    add.l   #$80<<16, d0
+    move.l  d0, ($C00004)
+    addq.w  #1, d2                  ; Next line
+    dbf     d7, @Loop
+
+    movem.l (sp)+, d0-d2            ; Restore registers
+    rts                             ; End of subroutine
+
+;****************************************************************************
+; ClearLines
+; Clears the description lines
+;****************************************************************************
+
+ClearLines:
+    move.l  #$448E0003, d0          ; Initial position to clear
+    lea     ($C00004), a0           ; VDP control port
+    lea     ($C00000), a1           ; VDP data port
+
+    moveq   #7-1, d1                ; Clear all lines
+    moveq   #0, d2
+@Loop:
+    move.l  d0, (a0)
+    rept    26/2
+    move.l  d2, (a1)
+    endr
+    add.l   #$80<<16, d0
+    dbf     d1, @Loop
+
+    rts                             ; End of subroutine
