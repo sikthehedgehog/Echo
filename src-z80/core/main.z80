@@ -87,8 +87,8 @@ EntryPoint:
     ld (ix+0), $25
     ld (ix+1), $03
     ld (ix+0), $26
-    ld (ix+0), $C9
-    ld (ix+1), $FF
+    ld (ix+1), $C9
+    ;ld (ix+1), $FF
     ld (ix+0), $27
     ld (ix+1), $3F
 
@@ -159,15 +159,15 @@ DoTick:
     bit 0, a
     call nz, UpdatePCM
 
-    ld (ix+0), $26              ; Reset timer
-.timerset:
-    ld (ix+1), $C8
+;    ld (ix+0), $26              ; Reset timer
+;.timerset:
+;    ld (ix+1), $C8
     ld (ix+0), $27
     ld (ix+1), $2F
 
-    ld a, (.timerset+3)         ; $C8 is too fast, $C9 is too slow
-    xor $01                     ; So, we alternate between them to compensate
-    ld (.timerset+3), a
+;    ld a, (.timerset+3)         ; $C8 is too fast, $C9 is too slow
+;    xor $01                     ; So, we alternate between them to compensate
+;    ld (.timerset+3), a
 
     PollPCM
 

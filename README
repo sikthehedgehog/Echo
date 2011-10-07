@@ -49,4 +49,7 @@ Available builds:
       Timer test. Only timer B is reloaded when it fires, timer A is left to
       loop on its own.
    built/echo-timer-version-c.bin
-      Timer test. Both timers are left to loop on their own.
+      Timer test. Both timers are left to loop on their own. Code for
+      initializing timer B is wrong so it doesn't work properly.
+   built/echo-timer-version-d.bin
+      What the previous ROM should have been, fixed timer B :|
