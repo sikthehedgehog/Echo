@@ -21,3 +21,13 @@ BGM_Minion:
 
 BGM_HoL:
     incbin  "data/music/hol.esf"
+
+;****************************************************************************
+; BGM_VolBug_*
+; Volume bug test BGMs
+;****************************************************************************
+
+BGM_VolBug_B:
+    incbin  "data/music/volbug_b.esf"
+BGM_VolBug_F:
+    incbin  "data/music/volbug_f.esf"

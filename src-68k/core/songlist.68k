@@ -6,6 +6,8 @@
 SongList:
     dc.l    BGM_Minion, @Str_Minion_1, @Str_Minion_2, @Str_Minion_3
     dc.l    BGM_HoL, @Str_HoL_1, @Str_Null, @Str_Null
+    dc.l    BGM_VolBug_B, @Str_VolBug_1, @Str_VolBug_2, @Str_Null
+    dc.l    BGM_VolBug_F, @Str_VolBug_1, @Str_VolBug_2A, @Str_Null
 
                        ; 012345678901234567890123456
 
@@ -18,6 +20,10 @@ SongList:
 
 @Str_HoL_1:         dc.b "Hall of Loneliness", 0
 
+@Str_VolBug_1:      dc.b "Volume bug test", 0
+@Str_VolBug_2:      dc.b "Broken version", 0
+@Str_VolBug_2A:     dc.b "Fixed version", 0
+
     even
 
 ;****************************************************************************
@@ -25,4 +31,4 @@ SongList:
 ; Number of songs in song list
 ;****************************************************************************
 
-NumSongs equ 2
+NumSongs equ 4

@@ -519,34 +519,39 @@ SetFMVolBGM:
     jp ProcessBGMRun            ; End of subroutine
 
 SetFMVolEvent:
-    push af
+    ex af, af'
     PollPCM
     call GetParam               ; Get new volume
     PollPCM
-    pop af
+    ex af, af'
 
 SetFMVolBGMEvent:
     push bc
     push de
     push hl
 
-    ld hl, RAM_FMVolume         ; Store new volume
+    ;ld hl, RAM_FMVolume         ; Store new volume
+    ;and $07
+    ;add l
+    ;ld l, a
+    ;ld (hl), b
+    
+    ;ld hl, RAM_FMData
+    ;ld a, l                     ; Get address of FM data
+    ;add 8
+    ;ld l, a
+    
+    push af
+    ld hl, RAM_FMData           ; Get address of FM data
     and $07
     add l
     ld l, a
-    ld (hl), b
-
-    ex af, af'
     PollPCM
-    ld a, l                     ; Get address of FM data
-    add 8
-    ld l, a
-    ex af, af'
+    pop af
 
 SetFMVolLoad:
     push af
-    ;ld iyh, $40                 ; Determine which port to write
-    and $04
+    and $04                     ; Determine which port to write
     rrca
     ld iyl, a
     PollPCM
@@ -556,7 +561,7 @@ SetFMVolLoad:
     add $40
     ld c, a
 
-    PollPCM
+    ;PollPCM
 
     ld a, (hl)                  ; Get algorithm
     and $07
@@ -572,8 +577,10 @@ SetFMVolLoad:
     jr c, .noop1
     ld a, (hl)
     add b
-    cp $7F
-    jr c, .notooloud1
+    ;cp $7F
+    ;jr c, .notooloud1
+    ;ld a, $7F
+    jp p, .notooloud1
     ld a, $7F
 .notooloud1:
     ld (iy+0), c
@@ -593,8 +600,10 @@ SetFMVolLoad:
     jr c, .noop2
     ld a, (hl)
     add b
-    cp $7F
-    jr c, .notooloud2
+    ;cp $7F
+    ;jr c, .notooloud2
+    ;ld a, $7F
+    jp p, .notooloud2
     ld a, $7F
 .notooloud2:
     ld (iy+0), c
@@ -614,8 +623,10 @@ SetFMVolLoad:
     jr c, .noop3
     ld a, (hl)
     add b
-    cp $7F
-    jr c, .notooloud3
+    ;cp $7F
+    ;jr c, .notooloud3
+    ;ld a, $7F
+    jp p, .notooloud3
     ld a, $7F
 .notooloud3:
     ld (iy+0), c
@@ -632,8 +643,10 @@ SetFMVolLoad:
     ld l, a
     ld a, (hl)                  ; Process operator #4
     add b
-    cp $7F
-    jr c, .notooloud4
+    ;cp $7F
+    ;jr c, .notooloud4
+    ;ld a, $7F
+    jp p, .notooloud4
     ld a, $7F
 .notooloud4:
     ld (iy+0), c
