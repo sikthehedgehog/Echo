@@ -101,5 +101,5 @@ DummyFMInstr:
     db  $1F         ; $50..$5C
     db  $1F         ; $60..$6C
     db  $1F         ; $70..$7C
-    db  $0F         ; $80..$8C
+    db  $FF         ; $80..$8C
     db  $00         ; $90..$9C

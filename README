@@ -43,6 +43,11 @@ How to build:
 
 Available builds:
 
+   built/echo-massive-crash.bin
+      Massive Echo crasher o_o; Two tunes screw up if played repeatedly, two
+      tunes outright crash the entire system. This only happens on real
+      hardware, *not* in emulators. FML.
+
    built/echo-timer-version-a.bin
       Timer test. Both timers get reloaded each time they're fired.
    built/echo-timer-version-b.bin

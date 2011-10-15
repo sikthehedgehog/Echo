@@ -73,6 +73,7 @@ ProcessBGM:
     ld d, (hl)
     ex de, hl
 
+ProcessBGMSkip:
 ProcessBGMRun:
     PollPCM                     ; Fetch next event
     call GetParam
@@ -163,9 +164,7 @@ ProcessBGMSkip1:                ; This is where we land after a locked event
     inc c
 .nobankskip1:
 
-ProcessBGMSkip:                 ; This is where we land after a locked event
-    PollPCM                       ; without parameters
-
+    PollPCM
     jp ProcessBGMRun            ; Keep processing
 
 ;****************************************************************************
@@ -210,38 +209,50 @@ ClearBGM:
     or a
     call z, StopPCM
 
+;----------------------------------------------------------------------------
+
     ld b, 4                     ; Mute all non-locked PSG channels
     ld de, RAM_PSGData+48
     ld hl, RAM_Locked+11
 .mutepsg:
     PollPCM
+    
     ld a, (hl)
     or a
-    jr nz, .nopsgmute
+    jp nz, .nopsgmute
     xor a
     ld (de), a
 .nopsgmute:
     PollPCM
+    
     ld a, e
     sub 16
     ld e, a
+    
     dec l
     djnz .mutepsg
+
+;----------------------------------------------------------------------------
 
     ld b, 8                     ; Mute all non-locked FM channels
 .mutefm:
     PollPCM
-    ld a, (hl)
+    
+    ld a, (hl)                    ; Check if channel is locked
     or a
-    jr nz, .nofmmute
+    jp nz, .nofmmute
+    
     PollPCM
-    dec b
-    ld (ix+0), $28
-    ld (ix+1), b
-    inc b
-.nofmmute:
+    
+    ld a, b                       ; Kill FM channel
+    dec a
+    call KillFM
+    
+.nofmmute:                        ; Go for next channel
     dec l
     djnz .mutefm
+
+;----------------------------------------------------------------------------
 
     ret                         ; End of subroutine
 

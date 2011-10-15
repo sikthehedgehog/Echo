@@ -4,30 +4,32 @@
 ;****************************************************************************
 
 NoteOnFMSFX:
+    and $07                     ; Get channel number
     call NoteOnFM               ; We're just a wrapper
     jp ProcessSFXRun            ; End of subroutine
 
 NoteOnFMBGM:
+    and $07                     ; Get channel number
     ld b, a
     PollPCM
 
-    push hl
+    push hl                     ; Check if channel is free
     ld a, b
-    and $07                     ; Check if channel is free
-    ld hl, RAM_Locked
-    add l
+    ld h, RAM_Locked>>8
+    add RAM_Locked&$FF
     ld l, a
     ld a, (hl)
     pop hl
     or a
     jp nz, ProcessBGMSkip1      ; Don't play if locked
+    
+    PollPCM
 
     ld a, b
     call NoteOnFM               ; We're just a wrapper
     jp ProcessBGMRun            ; End of subroutine
 
 NoteOnFM:
-    and $07                     ; Get channel ID
     ld (ix+0), $28              ; Note off
     ld (ix+1), a
 
@@ -100,18 +102,20 @@ NoteOnFM:
 ;****************************************************************************
 
 NoteOffFMSFX:
+    and $07                     ; Get channel ID
     call NoteOffFM              ; We're just a wrapper
     jp ProcessSFXRun            ; End of subroutine
 
 NoteOffFMBGM:
+    and $07                     ; Get channel ID
+    
     ld b, a
     PollPCM
     ld a, b
 
-    push hl
-    and $07                     ; Check if channel is free
-    ld hl, RAM_Locked
-    add l
+    push hl                     ; Check if channel is free
+    ld h, RAM_Locked>>8
+    add RAM_Locked&$FF
     ld l, a
     ld a, (hl)
     pop hl
@@ -123,9 +127,9 @@ NoteOffFMBGM:
     jp ProcessBGMRun            ; End of subroutine
 
 NoteOffFM:
-    and $07                     ; Get channel ID
     ld (ix+0), $28              ; Note off
     ld (ix+1), a
+    
     ret                         ; End of subroutine
 
 ;****************************************************************************
@@ -144,8 +148,8 @@ SetNoteFMBGM:
 
     push hl
     and $07                     ; Check if channel is free
-    ld hl, RAM_Locked
-    add l
+    ld h, RAM_Locked>>8
+    add RAM_Locked&$FF
     ld l, a
     ld a, (hl)
     pop hl
@@ -180,18 +184,15 @@ SetNoteFM:
     ld e, a
 
     PollPCM
-
     ld (iy+0), e                ; Load high byte
     ld (iy+1), b
 
-    PollPCM                     ; Load low byte
-    call GetParam
+    call GetParam               ; Load low byte
     PollPCM
 
     ld a, e
     sub 4
     ld e, a
-
     ld (iy+0), e
     ld (iy+1), b
 
@@ -205,26 +206,31 @@ SetNoteFM:
 ;****************************************************************************
 
 LoadFMSFX:
+    and $07                     ; Get channel ID
     call LoadFMEvent            ; We're just a wrapper
     jp ProcessSFXRun            ; End of subroutine
 
 LoadFMBGM:
     and $07                     ; Get channel ID
+    
     ld b, a
     PollPCM
 
     push de
     push bc
     ld a, b
-    ld de, RAM_BGMFMInstr       ; Store instrument ID
-    add e
+    
+    ld de, RAM_BGMFMInstr       ; Where to keep instrument ID for BGM
+    add e                         ; (used when unlocking channels)
     ld e, a
-    PollPCM
+    
+    PollPCM                     ; Store instrument ID
     call GetParam
     PollPCM
     ex de, hl
     ld (hl), b
     ex de, hl
+    
     ld e, c
     pop bc
     ld c, e
@@ -232,10 +238,10 @@ LoadFMBGM:
 
     PollPCM
 
-    push hl                     ;  Check if channel is free
-    ld hl, RAM_Locked
+    push hl                     ; Check if channel is free
     ld a, b
-    add l
+    ld h, RAM_Locked>>8
+    add RAM_Locked&$FF
     ld l, a
     ld a, (hl)
     pop hl
@@ -244,8 +250,7 @@ LoadFMBGM:
 
     PollPCM
 
-    ld a, b
-    and $07
+    ld a, b                     ; Get back the instrument ID
     push hl
     ld hl, RAM_BGMFMInstr
     add l
@@ -253,23 +258,21 @@ LoadFMBGM:
     ld b, (hl)
     pop hl
 
-    push af
+    ex af, af'
     PollPCM
-    pop af
+    ex af, af'
 
     call LoadFMDirect           ; We're just a wrapper
     jp ProcessBGMRun            ; End of subroutine
 
 LoadFMEvent:
-    and $07                     ; Get channel ID
-
     ex af, af'
     PollPCM
     call GetParam               ; Get instrument ID
     PollPCM
     ex af, af'
+    
 LoadFMDirect:
-
     push af
     and $04                     ; Determine which port to write
     rrca
@@ -333,9 +336,14 @@ LoadFMDirect:
     call KillFM
     ld a, b
 
-    ld de, RAM_FMData           ; Get address of FM data
+    ;ld de, RAM_FMData           ; Get address of FM data
+    ;and $07
+    ;add e
+    ;ld e, a
+    
     and $07
-    add e
+    ld d, RAM_FMData>>8
+    add RAM_FMData&$FF
     ld e, a
 
     push af
@@ -577,9 +585,6 @@ SetFMVolLoad:
     jr c, .noop1
     ld a, (hl)
     add b
-    ;cp $7F
-    ;jr c, .notooloud1
-    ;ld a, $7F
     jp p, .notooloud1
     ld a, $7F
 .notooloud1:
@@ -600,9 +605,6 @@ SetFMVolLoad:
     jr c, .noop2
     ld a, (hl)
     add b
-    ;cp $7F
-    ;jr c, .notooloud2
-    ;ld a, $7F
     jp p, .notooloud2
     ld a, $7F
 .notooloud2:
@@ -623,9 +625,6 @@ SetFMVolLoad:
     jr c, .noop3
     ld a, (hl)
     add b
-    ;cp $7F
-    ;jr c, .notooloud3
-    ;ld a, $7F
     jp p, .notooloud3
     ld a, $7F
 .notooloud3:
@@ -643,9 +642,6 @@ SetFMVolLoad:
     ld l, a
     ld a, (hl)                  ; Process operator #4
     add b
-    ;cp $7F
-    ;jr c, .notooloud4
-    ;ld a, $7F
     jp p, .notooloud4
     ld a, $7F
 .notooloud4:
@@ -691,8 +687,7 @@ SetFMParam:
     ld b, a
     PollPCM
 
-    ;ld iyh, $40                 ; Determine which port to write
-    ld a, b
+    ld a, b                     ; Determine which port to write
     and $04
     rrca
     ld iyl, a
@@ -752,12 +747,18 @@ LockChannelFM:
 ;****************************************************************************
 
 KillFM:
-    push af
-    push de
+    and $07                     ; Trim non-channel bits
     
-    and $03                       ; Load dummy FM instrument
+    push hl
+    push de
+    push af
+    
+    ld (ix+0), $28              ; Note off
+    ld (ix+1), a
+    
+    and $03                     ; Load dummy FM instrument
     add $40
-    ld c, 6
+    ld d, 6
     ld hl, DummyFMInstr
 .loaddummy:
     ex af, af'
@@ -779,19 +780,20 @@ KillFM:
     add 4
     
     inc l
-    dec c
+    dec d
     jp nz, .loaddummy
     
-    pop de
     PollPCM
     pop af
-
-    ld c, a                     ; Reset ADSR
+    
+    ld d, a                     ; Reset ADSR
     or $F0
     ld (ix+0), $28
     ld (ix+1), a
     ld (ix+0), $28
-    ld (ix+1), c
+    ld (ix+1), d
 
+    pop de
+    pop hl
     PollPCM
     ret                         ; End of subroutine
