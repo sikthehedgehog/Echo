@@ -43,7 +43,7 @@ How to build:
 
 Available builds:
 
-   built/echo-massive-crash.bin
+   built/massive-crash.bin
       Massive Echo crasher o_o; Two tunes screw up if played repeatedly, two
       tunes outright crash the entire system. This only happens on real
       hardware, *not* in emulators. FML.
