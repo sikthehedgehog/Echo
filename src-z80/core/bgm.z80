@@ -210,38 +210,59 @@ ClearBGM:
     or a
     call z, StopPCM
 
-    ld b, 4                     ; Mute all non-locked PSG channels
-    ld de, RAM_PSGData+48
+;----------------------------------------------------------------------------
+
+    ld b, 4                     ; Reset all PSG channels
+    ld de, RAM_PSGData+48+15
     ld hl, RAM_Locked+11
 .mutepsg:
     PollPCM
-    ld a, (hl)
+    
+    ld (hl), $00                ; Reset BGM volume
+    
+    ld a, e
+    sub 15
+    ld e, a
+    
+    ld a, (hl)                  ; Mute PSG channel if it isn't locked
     or a
     jr nz, .nopsgmute
     xor a
     ld (de), a
+    
 .nopsgmute:
     PollPCM
-    ld a, e
-    sub 16
-    ld e, a
+    
+    dec e
     dec l
     djnz .mutepsg
 
-    ld b, 8                     ; Mute all non-locked FM channels
-.mutefm:
+;----------------------------------------------------------------------------
+
+    ld b, 8                     ; Reset all FM channels
+    ld de, RAM_BGMFMVol+7
+.resetfm:
     PollPCM
-    ld a, (hl)
+    
+    xor a                       ; Reset BGM volume
+    ld (de), a
+    dec e
+    
+    ld a, (hl)                  ; Kill FM channel if not locked
     or a
-    jr nz, .nofmmute
+    jp nz, .nofmkill
+    
     PollPCM
-    dec b
-    ld (ix+0), $28
-    ld (ix+1), b
-    inc b
-.nofmmute:
+    
+    ld a, b
+    dec a
+    call KillFM
+    
+.nofmkill:
     dec l
-    djnz .mutefm
+    djnz .resetfm
+
+;----------------------------------------------------------------------------
 
     ret                         ; End of subroutine
 

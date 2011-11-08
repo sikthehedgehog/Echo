@@ -43,6 +43,9 @@ How to build:
 
 Available builds:
 
+   built/prog-z80.bin
+      Current build of Echo.
+   
    built/echo-timer-version-a.bin
       Timer test. Both timers get reloaded each time they're fired.
    built/echo-timer-version-b.bin

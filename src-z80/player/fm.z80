@@ -225,6 +225,13 @@ LoadFMBGM:
     ex de, hl
     ld (hl), b
     ex de, hl
+    
+    ld a, e                     ; Reset volume
+    add 8
+    ld e, a
+    xor a
+    ld (de), a
+    
     ld e, c
     pop bc
     ld c, e
@@ -232,7 +239,7 @@ LoadFMBGM:
 
     PollPCM
 
-    push hl                     ;  Check if channel is free
+    push hl                     ; Check if channel is free
     ld hl, RAM_Locked
     ld a, b
     add l
@@ -354,9 +361,9 @@ LoadFMDirect:
     ld (iy+1), b
 
     ex af, af'                  ; Store $B0 register in FM data buffer
-    ld a, b                     ; Also store it in the FM channel information
-    ld (de), a                  ; table since we need it when changing the
-    ld a, e                     ; FM channel volume
+    ld a, b
+    ld (de), a
+    ld a, e
     add 8
     ld e, a
     PollPCM
@@ -370,37 +377,50 @@ LoadFMDirect:
     
     ld (iy+0), a
     ld b, (hl)
+    nop
     ld (iy+1), b
     add 4
     inc l
+    nop
+    
     ld (iy+0), a
     ld b, (hl)
+    nop
     ld (iy+1), b
     add 4
     inc l
+    nop
+    
     ld (iy+0), a
     ld b, (hl)
+    nop
     ld (iy+1), b
     add 4
     inc l
+    nop
+    
     ld (iy+0), a
     ld b, (hl)
+    nop
     ld (iy+1), b
     add 4
     inc l
+    nop
 
     ld b, 4                     ; Write registers $40-$4C
-.reg40:                         ; Also store the registers in the FM channel
-    ld c, a                     ; information field since we'll need them to
-    push af                     ; set the FM channel volume
+.reg40:
+    ld c, a
+    push af
     PollPCM
+    
     ld (iy+0), c
     ld a, (hl)
-    ld (iy+1), a
     ld (de), a
+    ld (iy+1), a
     ld a, e
     add 8
     ld e, a
+    
     pop af
     add 4
     inc l
@@ -408,33 +428,41 @@ LoadFMDirect:
 
     ld b, 20/4                  ; Write registers $50-$5C
 .reg50:
-    ld c, b
     ex af, af'
     PollPCM
     ex af, af'
     
     ld (iy+0), a
-    ld b, (hl)
-    ld (iy+1), b
+    ld c, (hl)
+    nop
+    ld (iy+1), c
     add 4
     inc l
-    ld (iy+0), a
-    ld b, (hl)
-    ld (iy+1), b
-    add 4
-    inc l
-    ld (iy+0), a
-    ld b, (hl)
-    ld (iy+1), b
-    add 4
-    inc l
-    ld (iy+0), a
-    ld b, (hl)
-    ld (iy+1), b
-    add 4
+    nop
     
+    ld (iy+0), a
+    ld c, (hl)
+    nop
+    ld (iy+1), c
+    add 4
     inc l
-    ld b, c
+    nop
+    
+    ld (iy+0), a
+    ld c, (hl)
+    nop
+    ld (iy+1), c
+    add 4
+    inc l
+    nop
+    
+    ld (iy+0), a
+    ld c, (hl)
+    nop
+    ld (iy+1), c
+    add 4
+    inc l
+    
     djnz .reg50
 
     PollPCM
@@ -454,8 +482,6 @@ LoadFMDirect:
     pop de
     pop bc
     ret
-    
-    ;jp SetFMVolLoad             ; End of subroutine
 
 ;****************************************************************************
 ; SetFMVol*
@@ -475,8 +501,11 @@ SetFMVolBGM:
     push de
     push bc
     ld a, b
-    ld de, RAM_BGMFMVol         ; Store BGM volume
-    add e
+    ;ld de, RAM_BGMFMVol         ; Store BGM volume
+    ;add e
+    ;ld e, a
+    ld d, RAM_BGMFMVol>>8
+    add RAM_BGMFMVol&$FF
     ld e, a
     PollPCM
     call GetParam
@@ -515,7 +544,8 @@ SetFMVolBGM:
     PollPCM
     pop af
 
-    call SetFMVolBGMEvent       ; We're just a wrapper
+    ;call SetFMVolBGMEvent       ; We're just a wrapper
+    call SetFMVolLoad           ; We're just a wrapper
     jp ProcessBGMRun            ; End of subroutine
 
 SetFMVolEvent:
@@ -526,27 +556,39 @@ SetFMVolEvent:
     pop af
 
 SetFMVolBGMEvent:
+    ;push bc
+    ;push de
+    ;push hl
+
+    ;ld hl, RAM_FMVolume         ; Store new volume
+    ;and $07
+    ;add l
+    ;ld l, a
+    ;ld (hl), b
+
+SetFMVolLoad:
     push bc
     push de
     push hl
-
-    ld hl, RAM_FMVolume         ; Store new volume
+    
     and $07
-    add l
-    ld l, a
-    ld (hl), b
-
-    ex af, af'
-    PollPCM
-    ld a, l                     ; Get address of FM data
-    add 8
-    ld l, a
-    ex af, af'
-
-SetFMVolLoad:
+    
+    ;ex af, af'
+    ;PollPCM
+    ;ld a, l                     ; Get address of FM data
+    ;add 8
+    ;ld l, a
+    ;ex af, af'
+    
     push af
-    ;ld iyh, $40                 ; Determine which port to write
-    and $04
+    ld h, RAM_FMData>>8         ; Get address of FM data
+    add RAM_FMData&$FF
+    ld l, a
+    PollPCM
+    pop af
+
+    push af
+    and $04                     ; Determine which port to write
     rrca
     ld iyl, a
     PollPCM
@@ -555,8 +597,6 @@ SetFMVolLoad:
     and $03                     ; Index of first volume register
     add $40
     ld c, a
-
-    PollPCM
 
     ld a, (hl)                  ; Get algorithm
     and $07
@@ -570,13 +610,13 @@ SetFMVolLoad:
     ld a, e                     ; Process operator #1
     cp $07
     jr c, .noop1
+    ld (iy+0), c
     ld a, (hl)
     add b
     cp $7F
     jr c, .notooloud1
     ld a, $7F
 .notooloud1:
-    ld (iy+0), c
     ld (iy+1), a
 .noop1:
     ld a, c
@@ -591,13 +631,13 @@ SetFMVolLoad:
     ld a, e                     ; Process operator #2
     cp $05
     jr c, .noop2
+    ld (iy+0), c
     ld a, (hl)
     add b
     cp $7F
     jr c, .notooloud2
     ld a, $7F
 .notooloud2:
-    ld (iy+0), c
     ld (iy+1), a
 .noop2:
     ld a, c
@@ -612,13 +652,13 @@ SetFMVolLoad:
     ld a, e                     ; Process operator #3
     cp $04
     jr c, .noop3
+    ld (iy+0), c
     ld a, (hl)
     add b
     cp $7F
     jr c, .notooloud3
     ld a, $7F
 .notooloud3:
-    ld (iy+0), c
     ld (iy+1), a
 .noop3:
     ld a, c
@@ -630,13 +670,13 @@ SetFMVolLoad:
     ld a, l
     add 8
     ld l, a
+    ld (iy+0), c
     ld a, (hl)                  ; Process operator #4
     add b
     cp $7F
     jr c, .notooloud4
     ld a, $7F
 .notooloud4:
-    ld (iy+0), c
     ld (iy+1), a
 
     PollPCM
@@ -678,8 +718,7 @@ SetFMParam:
     ld b, a
     PollPCM
 
-    ;ld iyh, $40                 ; Determine which port to write
-    ld a, b
+    ld a, b                     ; Determine which port to write
     and $04
     rrca
     ld iyl, a
@@ -739,10 +778,22 @@ LockChannelFM:
 ;****************************************************************************
 
 KillFM:
+    and $07                     ; Get channel ID
+    
     push af
     push de
+    push hl
     
-    and $03                       ; Load dummy FM instrument
+    ld c, a                     ; Determine to which port to write
+    and $04
+    rrca
+    ld iyl, a
+    ld a, c
+    
+    ld (ix+0), $28              ; Stop current note (if any)
+    ld (ix+1), a
+    
+    and $03                     ; Load dummy FM instrument
     add $40
     ld c, 6
     ld hl, DummyFMInstr
@@ -753,22 +804,26 @@ KillFM:
     ld e, (hl)
     
     ld (iy+0), a
-    ld (iy+1), e
     add 4
+    ld (iy+1), e
+    nop
     ld (iy+0), a
-    ld (iy+1), e
     add 4
+    ld (iy+1), e
+    nop
     ld (iy+0), a
-    ld (iy+1), e
     add 4
+    ld (iy+1), e
+    nop
     ld (iy+0), a
-    ld (iy+1), e
     add 4
+    ld (iy+1), e
     
     inc l
     dec c
     jp nz, .loaddummy
     
+    pop hl
     pop de
     PollPCM
     pop af

@@ -273,26 +273,16 @@ ClearSFX:
     rrca
     ld iyl, a
     
-    ld a, b                     ; Kill ADSR
+    ld a, b                       ; Kill ADSR
     call KillFM
 
     PollPCM
-
-    ld hl, RAM_BGMFMVol           ; Restore BGM FM volume
-    ld a, b
-    add l
+    
+    ld a, b                       ; Restore BGM FM instrument
+    ld h, RAM_BGMFMInstr>>8
+    add RAM_BGMFMInstr&$FF
     ld l, a
-    ld c, (hl)
-    ld a, l
-    add 8
-    ld l, a
-    ld (hl), c
-
-    PollPCM
-
-    ld a, l                       ; Restore BGM FM instrument
-    sub 8*2
-    ld l, a
+    
     push bc
     push de
     push hl
@@ -302,6 +292,14 @@ ClearSFX:
     pop hl
     pop de
     pop bc
+    
+    PollPCM
+    
+    ld a, b                       ; Restore BGM FM volume
+    add RAM_BGMFMVol&$FF
+    ld l, a
+    ld b, (hl)
+    call SetFMVolLoad
 
     PollPCM
     inc b
