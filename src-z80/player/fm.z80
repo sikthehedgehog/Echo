@@ -489,7 +489,7 @@ LoadFMDirect:
 ;****************************************************************************
 
 SetFMVolSFX:
-    call SetFMVolEvent          ; We're just a wrapper
+    call SetFMVolSFXEvent       ; We're just a wrapper
     jp ProcessSFXRun            ; End of subroutine
 
 SetFMVolBGM:
@@ -501,10 +501,7 @@ SetFMVolBGM:
     push de
     push bc
     ld a, b
-    ;ld de, RAM_BGMFMVol         ; Store BGM volume
-    ;add e
-    ;ld e, a
-    ld d, RAM_BGMFMVol>>8
+    ld d, RAM_BGMFMVol>>8        ; Store BGM volume
     add RAM_BGMFMVol&$FF
     ld e, a
     PollPCM
@@ -544,27 +541,15 @@ SetFMVolBGM:
     PollPCM
     pop af
 
-    ;call SetFMVolBGMEvent       ; We're just a wrapper
     call SetFMVolLoad           ; We're just a wrapper
     jp ProcessBGMRun            ; End of subroutine
 
-SetFMVolEvent:
+SetFMVolSFXEvent:
     push af
     PollPCM
     call GetParam               ; Get new volume
     PollPCM
     pop af
-
-SetFMVolBGMEvent:
-    ;push bc
-    ;push de
-    ;push hl
-
-    ;ld hl, RAM_FMVolume         ; Store new volume
-    ;and $07
-    ;add l
-    ;ld l, a
-    ;ld (hl), b
 
 SetFMVolLoad:
     push bc
@@ -573,21 +558,15 @@ SetFMVolLoad:
     
     and $07
     
-    ;ex af, af'
-    ;PollPCM
-    ;ld a, l                     ; Get address of FM data
-    ;add 8
-    ;ld l, a
-    ;ex af, af'
-    
     push af
     ld h, RAM_FMData>>8         ; Get address of FM data
     add RAM_FMData&$FF
     ld l, a
+    
+    ex af, af'
     PollPCM
-    pop af
+    ex af, af'
 
-    push af
     and $04                     ; Determine which port to write
     rrca
     ld iyl, a

@@ -41,8 +41,17 @@ PlayBGM:
 
     ld hl, ProcessBGM           ; Tell Echo to process BGM
     ld (DoTick_BGM+1), hl
+    
+    ld b, 8                     ; Kill all FM channels explicitly
+.resetallfm:
+    ld a, b
+    and $04
+    rrca
+    ld iyl, a
+    ld a, b
+    call KillFM
+    djnz .resetallfm
 
-    PollPCM
     jp IdleLoop                 ; End of subroutine
 
 ;****************************************************************************
@@ -244,7 +253,8 @@ ClearBGM:
 .resetfm:
     PollPCM
     
-    xor a                       ; Reset BGM volume
+    ;xor a                       ; Reset BGM volume
+    ld a, $7F
     ld (de), a
     dec e
     
