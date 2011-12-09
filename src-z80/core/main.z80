@@ -309,7 +309,7 @@ GetParam:
 .noswitchp:
     ld b, (hl)                  ; Get volume
 
-    PollPCM
+    ;PollPCM
 
     inc l                       ; Get next address
     jp nz, .nonewbankp

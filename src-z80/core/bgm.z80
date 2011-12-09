@@ -42,15 +42,15 @@ PlayBGM:
     ld hl, ProcessBGM           ; Tell Echo to process BGM
     ld (DoTick_BGM+1), hl
     
-    ld b, 8                     ; Kill all FM channels explicitly
-.resetallfm:
-    ld a, b
-    and $04
-    rrca
-    ld iyl, a
-    ld a, b
-    call KillFM
-    djnz .resetallfm
+;    ld b, 8                     ; Kill all FM channels explicitly
+;.resetallfm:
+;    ld a, b
+;    and $04
+;    rrca
+;    ld iyl, a
+;    ld a, b
+;    call KillFM
+;    djnz .resetallfm
 
     jp IdleLoop                 ; End of subroutine
 
@@ -83,6 +83,7 @@ ProcessBGM:
     ex de, hl
 
 ProcessBGMRun:
+ProcessBGMSkip:
     PollPCM                     ; Fetch next event
     call GetParam
     PollPCM
@@ -171,9 +172,6 @@ ProcessBGMSkip1:                ; This is where we land after a locked event
     ld h, $80
     inc c
 .nobankskip1:
-
-ProcessBGMSkip:                 ; This is where we land after a locked event
-    PollPCM                       ; without parameters
 
     jp ProcessBGMRun            ; Keep processing
 

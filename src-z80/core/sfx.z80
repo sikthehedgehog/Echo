@@ -291,12 +291,14 @@ ClearSFX:
     
     PollPCM
     
+    push bc
     ld a, b                       ; Restore BGM FM volume
     add RAM_BGMFMVol&$FF
     ld l, a
     ld a, b
     ld b, (hl)
     call SetFMVolLoad
+    pop bc
 
     PollPCM
     inc b
