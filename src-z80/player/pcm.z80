@@ -76,6 +76,8 @@ UpdatePCM:
     jr z, .stop                   ; If so, stop
     ld (ix+0), $2A              ; Nope, send sample to YM2612
     ld (ix+1), a
+    
+    ld (RAM_NoteData+$A), a
 
     inc e                       ; Get address for next sample
     jr nz, .nopcm
