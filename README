@@ -12,6 +12,12 @@ ready for use.
 
 tl;dr DON'T USE ECHO YET :|
 
+Echo tools are available as part of the mdtools set:
+https://github.com/sikthehedgehog/mdtools
+
+Also Oerg made a xm2esf tool, and an ESF optimization tool:
+https://github.com/oerg866/xm2esf
+
 -----------------------------------------------------------------------------
 
 Current version: 0.8
