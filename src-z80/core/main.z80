@@ -100,8 +100,8 @@ EntryPoint:
 
 PollPCM: macro
     ld a, ($4000)
-    bit 0, a
-    call nz, UpdatePCM
+    rrca
+    call c, UpdatePCM
     endm
 
 ;****************************************************************************
