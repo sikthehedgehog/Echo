@@ -20,7 +20,7 @@ https://github.com/oerg866/xm2esf
 
 -----------------------------------------------------------------------------
 
-Current version: 0.8
+Current version: 0.9
 
    And yes, I know the source code is a mess, I need to clean it up severely.
    Also I know some stuff could be done better (e.g. buffering PCM instead of
