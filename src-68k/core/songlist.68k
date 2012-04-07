@@ -4,19 +4,64 @@
 ;****************************************************************************
 
 SongList:
-    dc.l    BGM_Minion, @Str_Minion_1, @Str_Minion_2, @Str_Minion_3
-    dc.l    BGM_HoL, @Str_HoL_1, @Str_Null, @Str_Null
+    dc.l    BGM_Midnas, @Str_Midnas_1, @Str_Midnas_2, @Str_Midnas_3
+    dc.l    BGM_Nelpel, @Str_Nelpel_1, @Str_Nelpel_2, @Str_Nelpel_3
+    dc.l    BGM_Megajysays, @Str_Megajysays_1, @Str_Megajysays_2, @Str_Megajysays_3
+    dc.l    BGM_Doomsday, @Str_Doomsday_1, @Str_Doomsday_2, @Str_Doomsday_3
+    dc.l    BGM_PianoTest, @Str_PianoTest_1, @Str_PianoTest_2, @Str_Null
+    dc.l    BGM_SquSawTest2, @Str_SquSawTest_1a, @Str_SquSawTest_2, @Str_SquSawTest_3a
+    dc.l    BGM_SquSawTest1, @Str_SquSawTest_1b, @Str_SquSawTest_2, @Str_SquSawTest_3b
+    dc.l    BGM_PSGTest, @Str_PSGTest_1, @Str_PSGTest_2, @Str_Null
+    dc.l    BGM_DrumTest, @Str_DrumTest_1, @Str_DrumTest_2, @Str_Null
+    dc.l    BGM_FluteTest, @Str_FluteTest_1, @Str_FluteTest_2, @Str_FluteTest_3
 
                        ; 012345678901234567890123456
-
 @Str_Null:          dc.b 0
 @Str_Untitled:      dc.b "[untitled]", 0
 
-@Str_Minion_1:      dc.b "Evil's Minion", 0
-@Str_Minion_2:      dc.b "My distortion guitar is", 0
-@Str_Minion_3:      dc.b "better than Tiido's B)", 0
+                       ; 012345678901234567890123456
+@Str_Midnas_1:      dc.b "Midna's Desperate Hour", 0
+@Str_Midnas_2:      dc.b "Composed by Koji Kondo", 0
+@Str_Midnas_3:      dc.b "Transcribed by Aivi Tran", 0
 
-@Str_HoL_1:         dc.b "Hall of Loneliness", 0
+                       ; 012345678901234567890123456
+@Str_Nelpel_1:      dc.b "Nelpel Four (crappy ver.)", 0
+@Str_Nelpel_2:      dc.b "XM > MIDI > ESF conversion", 0
+@Str_Nelpel_3:      dc.b "and really bad instruments", 0
+
+                       ; 012345678901234567890123456
+@Str_Megajysays_1:  dc.b "Megajysays", 0
+@Str_Megajysays_2:  dc.b "That second A should have", 0
+@Str_Megajysays_3:  dc.b "two dots on top of it.", 0
+
+                       ; 012345678901234567890123456
+@Str_Doomsday_1:    dc.b "The Doomsday Project", 0
+@Str_Doomsday_2:    dc.b "Another module conversion.", 0
+@Str_Doomsday_3:    dc.b "Like I give a crap :P", 0
+
+                       ; 012345678901234567890123456
+@Str_PianoTest_1:   dc.b "test-piano.mid", 0
+@Str_PianoTest_2:   dc.b "Some generic piano...", 0
+
+                       ; 012345678901234567890123456
+@Str_SquSawTest_1a: dc.b "test-squsaw-2ch.mid", 0
+@Str_SquSawTest_1b: dc.b "test-squsaw-1ch.mid", 0
+@Str_SquSawTest_2:  dc.b "FM square and sawtooth", 0
+@Str_SquSawTest_3a: dc.b "2 channels version", 0
+@Str_SquSawTest_3b: dc.b "1 channel version", 0
+
+                       ; 012345678901234567890123456
+@Str_PSGTest_1:     dc.b "test-psg.mid", 0
+@Str_PSGTest_2:     dc.b "Two square PSG channels.", 0
+
+                       ; 012345678901234567890123456
+@Str_DrumTest_1:    dc.b "test-drums.mid", 0
+@Str_DrumTest_2:    dc.b "Snare and kicks!", 0
+
+                       ; 012345678901234567890123456
+@Str_FluteTest_1:   dc.b "test-flute.mid", 0
+@Str_FluteTest_2:   dc.b "Flute and a seashore.", 0
+@Str_FluteTest_3:   dc.b "Feels so calm...", 0
 
     even
 
@@ -25,4 +70,4 @@ SongList:
 ; Number of songs in song list
 ;****************************************************************************
 
-NumSongs equ 2
+NumSongs equ 10

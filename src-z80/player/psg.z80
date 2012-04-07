@@ -573,8 +573,6 @@ SetNotePSGBGM:
 
     push hl
     and $0F                     ; Check if channel is free
-    ;ld hl, RAM_Locked
-    ;add l
     ld h, RAM_Locked>>8
     add RAM_Locked&$FF
     ld l, a
@@ -640,14 +638,14 @@ SetNoteNoiseBGM:
 ;****************************************************************************
 
 LockChannelPSG:
+    and $03
     ld b, a
     PollPCM
     push hl
 
     ld h, RAM_Locked>>8         ; Get address of channel to lock
     ld a, b
-    and $0F
-    add RAM_Locked&$FF
+    add (RAM_Locked&$FF)+8
     ld l, a
 
     ld (hl), $01                ; Lock channel

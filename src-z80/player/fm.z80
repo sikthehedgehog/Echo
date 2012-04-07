@@ -668,29 +668,6 @@ SetFMVolLoad:
 ;****************************************************************************
 
 SetFMParamSFX:
-    call SetFMParam             ; We're just a wrapper
-    jp ProcessSFXRun            ; End of subroutine
-
-SetFMParamBGM:
-    ld b, a
-    PollPCM
-    ld a, b
-
-    push hl
-    and $07                     ; Check if channel is free
-    ld hl, RAM_Locked
-    add l
-    ld l, a
-    ld a, (hl)
-    pop hl
-    or a
-    jp nz, ProcessBGMSkip1      ; Don't modify if locked
-
-    ld a, b
-    call SetFMParam             ; We're just a wrapper
-    jp ProcessBGMRun            ; End of subroutine
-
-SetFMParam:
     ld b, a
     PollPCM
 
@@ -711,7 +688,53 @@ SetFMParam:
     ld (iy+0), a                ; Set new parameters
     ld (iy+1), b
 
-    ret                         ; End of subroutine
+    jp ProcessSFXRun            ; End of subroutine
+
+SetFMParamBGM:
+    ld b, a
+    PollPCM
+    ld a, b
+    
+    ld a, b                     ; Determine which port to write
+    and $04
+    rrca
+    ld iyl, a
+
+    ex af, af'
+    PollPCM
+    call GetParam               ; Get parameters
+    PollPCM
+    ex af, af'
+    
+    push hl
+    and $07                     ; Store parameters
+    ld h, RAM_BGMFMPan>>8
+    add RAM_BGMFMPan&$FF
+    ld l, h
+    ld (hl), b
+    
+    ex af, af'
+    PollPCM
+    ex af, af'
+
+    and $07                     ; Check if channel is free
+    add RAM_Locked&$FF
+    ld l, a
+    ex af, af'
+    ld a, (hl)
+    or a
+    pop hl
+    jp nz, ProcessBGMRun        ; Don't modify if locked
+    
+    PollPCM
+    ex af, af'
+
+    and $03                     ; Get channel ID
+    add $B4
+    ld (iy+0), a                ; Set new parameters
+    ld (iy+1), b
+    
+    jp ProcessBGMRun            ; End of subroutine
 
 ;****************************************************************************
 ; LockChannelFM [events $E0-$E7]
@@ -766,9 +789,6 @@ KillFM:
     ld iyl, a
     ld a, c
     
-    ld (ix+0), $28              ; Stop current note (if any)
-    ld (ix+1), a
-    
     and $03                     ; Load dummy FM instrument
     add $40
     ld c, 6
@@ -804,8 +824,10 @@ KillFM:
     PollPCM
     pop af
 
-    ld c, a                     ; Reset ADSR
+    ld c, a                     ; Cause the ADSR to reset
     or $F0
+    ld (ix+0), $28
+    ld (ix+1), c
     ld (ix+0), $28
     ld (ix+1), a
     ld (ix+0), $28

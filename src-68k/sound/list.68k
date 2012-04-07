@@ -12,6 +12,19 @@ PointerList:
     Echo_ListEntry Instr_Bass           ; $05 [FM] Standard bass
     Echo_ListEntry Instr_SoftPSG        ; $06 [PSG] Soft PSG envelope
     Echo_ListEntry Instr_PianoPSG       ; $07 [PSG] Piano PSG instrument
+    Echo_ListEntry Instr_MidiPSG        ; $08 [PSG] MIDI square lead
+    Echo_ListEntry Instr_MidiPiano      ; $09 [FM] MIDI piano
+    Echo_ListEntry Instr_MidiLead1      ; $0A [FM] MIDI square lead
+    Echo_ListEntry Instr_MidiLead2      ; $0B [FM] MIDI sawtooth lead
+    Echo_ListEntry Instr_MidiFlute      ; $0C [FM] MIDI flute
+    Echo_ListEntry Instr_NepelPSG       ; $0D [PSG] Nepel Four PSG instr.
+    Echo_ListEntry Instr_MidiSynthBass  ; $0E [FM] MIDI synth bass
+    Echo_ListEntry Instr_MidiLead1F     ; $0F [FM] MIDI square (filtered)
+    Echo_ListEntry Instr_MidiLead2F     ; $10 [FM] MIDI sawtooth (filtered)
+    Echo_ListEntry Instr_Seashore       ; $11 [PSG] Seashore
+    Echo_ListEntry Instr_HitHat         ; $12 [PSG] Hit-hat
+    Echo_ListEntry Instr_PSGString      ; $13 [PSG] PSG string
+    Echo_ListEntry Instr_EGuitar        ; $14 [FM] Electric guitar
     Echo_ListEnd
 
 ;****************************************************************************
@@ -83,3 +96,135 @@ Instr_PianoPSG:
     dc.b    $0C,$0C,$0C,$0C,$0D,$0D,$0D,$0D
     dc.b    $0D,$0D,$0D,$0D,$0E,$0E,$0E,$0E
     dc.b    $0E,$0E,$0E,$0E,$FE,$0F,$FF
+
+;****************************************************************************
+; Instrument $08 [PSG]
+; MIDI square wave instrument (GM81)
+;****************************************************************************
+
+Instr_MidiPSG:
+    dc.b    $00,$01,$02,$FE,$03,$FF
+
+;****************************************************************************
+; Instrument $09 [FM]
+; MIDI acoustic piano (GM01)
+;****************************************************************************
+
+Instr_MidiPiano:
+    incbin  "data/fm/piano.eif"
+
+;****************************************************************************
+; Instrument $0A [FM]
+; MIDI square wave instrument (GM81)
+;****************************************************************************
+
+Instr_MidiLead1:
+    incbin  "data/fm/square.eif"
+
+;****************************************************************************
+; Instrument $0B [FM]
+; MIDI sawtooth wave instrument (GM82)
+;****************************************************************************
+
+Instr_MidiLead2:
+    incbin  "data/fm/saw.eif"
+
+;****************************************************************************
+; Instrument $0C [FM]
+; MIDI flute instrument (GM74)
+;****************************************************************************
+
+Instr_MidiFlute:
+    incbin  "data/fm/flute.eif"
+
+;****************************************************************************
+; Instrument $0D [PSG]
+; Nepel Four PSG instrument
+;****************************************************************************
+
+Instr_NepelPSG:
+    dc.b    $05,$06,$FE,$07,$FF
+
+;****************************************************************************
+; Instrument $0E [FM]
+; MIDI synth bass (GM39)
+;****************************************************************************
+
+Instr_MidiSynthBass:
+    incbin  "data/fm/ebass.eif"
+
+;****************************************************************************
+; Instrument $0F [FM]
+; MIDI square wave instrument (GM81) (filtered)
+;****************************************************************************
+
+Instr_MidiLead1F:
+    incbin  "data/fm/squaref.eif"
+
+;****************************************************************************
+; Instrument $10 [FM]
+; MIDI sawtooth wave instrument (GM82) (filtered)
+;****************************************************************************
+
+Instr_MidiLead2F:
+    incbin  "data/fm/sawf.eif"
+
+;****************************************************************************
+; Instrument $11 [PSG]
+; Seashore
+;****************************************************************************
+
+Instr_Seashore:
+    dcb.b   4, $0E
+    dcb.b   4, $0D
+    dcb.b   4, $0C
+    dcb.b   4, $0B
+    dcb.b   4, $0A
+    dcb.b   4, $09
+    dcb.b   4, $08
+    dcb.b   4, $07
+    dcb.b   4, $06
+    dcb.b   60, $05
+    dcb.b   4, $06
+    dcb.b   4, $07
+    dcb.b   4, $08
+    dcb.b   4, $09
+    dcb.b   4, $0A
+    dcb.b   4, $0B
+    dcb.b   4, $0C
+    dcb.b   4, $0D
+    dcb.b   4, $0E
+    dc.b    $FE, $0F, $FF
+
+;****************************************************************************
+; Instrument $12 [PSG]
+; Hit-hat
+;****************************************************************************
+
+Instr_HitHat:
+    dc.b    $00, $01, $02, $04, $06, $08, $0C
+    dc.b    $FE, $0F, $FF
+
+;****************************************************************************
+; Instrument $13 [PSG]
+; PSG string
+;****************************************************************************
+
+Instr_PSGString:
+    dcb.b   4, $0E
+    dcb.b   4, $0D
+    dcb.b   4, $0C
+    dcb.b   4, $0B
+    dcb.b   4, $0A
+    dcb.b   4, $09
+    dcb.b   4, $08
+    dc.b    $FE, $07, $FF
+
+;****************************************************************************
+; Instrument $14 [FM]
+; Electric guitar
+;****************************************************************************
+
+Instr_EGuitar:
+    incbin  "data/fm/eguitar.eif"
+
