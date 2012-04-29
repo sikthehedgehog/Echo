@@ -367,30 +367,110 @@ LoadFMDirect:
     ex af, af'
 
     sub $B0-$30
+
+    ex af, af'                  ; Write registers $30-$3C
+    PollPCM
+    ex af, af'
     
-    ld b, 7*4                   ; Load operator registers into the YM2612
-.loadfmloop:
     ld (iy+0), a
-    ld c, (hl)
-    ld (iy+1), c
+    ld b, (hl)
+    nop
+    ld (iy+1), b
     add 4
     inc l
-    djnz .loadfmloop
+    nop
     
+    ld (iy+0), a
+    ld b, (hl)
+    nop
+    ld (iy+1), b
+    add 4
+    inc l
+    nop
+    
+    ld (iy+0), a
+    ld b, (hl)
+    nop
+    ld (iy+1), b
+    add 4
+    inc l
+    nop
+    
+    ld (iy+0), a
+    ld b, (hl)
+    nop
+    ld (iy+1), b
+    add 4
+    inc l
+    nop
+
+    ld b, 4                     ; Write registers $40-$4C
+.reg40:
+    ld c, a
+    push af
     PollPCM
     
-    ld a, l                     ; Store operator TLs (needed to set the
-    sub 24                        ; volume properly when it changes)
-    ld l, a
-    ld b, 4
-.loadfmsavetl:
+    ld (iy+0), c
     ld a, (hl)
     ld (de), a
+    ld (iy+1), a
     ld a, e
     add 8
     ld e, a
-    inc l 
-    djnz .loadfmsavetl
+    
+    pop af
+    add 4
+    inc l
+    djnz .reg40
+
+    ld b, 20/4                  ; Write registers $50-$5C
+.reg50:
+    ex af, af'
+    PollPCM
+    ex af, af'
+    
+    ld (iy+0), a
+    ld c, (hl)
+    nop
+    ld (iy+1), c
+    add 4
+    inc l
+    nop
+    
+    ld (iy+0), a
+    ld c, (hl)
+    nop
+    ld (iy+1), c
+    add 4
+    inc l
+    nop
+    
+    ld (iy+0), a
+    ld c, (hl)
+    nop
+    ld (iy+1), c
+    add 4
+    inc l
+    nop
+    
+    ld (iy+0), a
+    ld c, (hl)
+    nop
+    ld (iy+1), c
+    add 4
+    inc l
+    
+    djnz .reg50
+
+    PollPCM
+    
+    ex de, hl
+    ld a, l
+    sub 8*6
+    ld l, a
+    ld b, (hl)
+    add 8
+    ld l, a
     
     PollPCM
 
@@ -473,7 +553,7 @@ SetFMVolLoad:
     push de
     push hl
     
-    and $07                     ; Get channel ID
+    and $07
     
     push af
     ld h, RAM_FMData>>8         ; Get address of FM data

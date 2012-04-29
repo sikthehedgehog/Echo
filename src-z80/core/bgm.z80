@@ -241,26 +241,45 @@ ClearBGM:
 .resetfm:
     PollPCM
     
-    ;xor a                       ; Reset BGM volume
-    ld a, $7F
+    ld a, $7F                   ; Reset BGM volume
     ld (de), a
     dec e
+    
+    PollPCM
     
     ld a, (hl)                  ; Kill FM channel if not locked
     or a
     jp nz, .nofmkill
+    dec b
+    
+    ld a, b
+    call KillFM
     
     PollPCM
     
+    ld a, b                     ; Reset panning
+    and $04
+    ld iyl, a
     ld a, b
-    dec a
-    call KillFM
+    and $03
+    add $B4
+    ld (iy+0), a
+    ld (iy+1), $C0
     
+    inc b
 .nofmkill:
     dec l
     djnz .resetfm
 
 ;----------------------------------------------------------------------------
+    
+    ld hl, RAM_BGMFMPan         ; Reset panning status (for restoring)
+    ld a, $C0
+    ld b, 8
+.initpanstat:
+    ld (hl), a
+    inc l
+    djnz .initpanstat
 
     ret                         ; End of subroutine
 

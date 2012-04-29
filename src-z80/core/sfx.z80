@@ -262,21 +262,9 @@ ClearSFX:
     xor a
     ld (de), a
 
-    dec b                         ; Mute FM channel
-    ld (ix+0), $28
-    ld (ix+1), b
-
     PollPCM
     
-    ld a, b
-    and $04                       ; Determine which port to write
-    rrca
-    ld iyl, a
-    
-    ld a, b                       ; Kill ADSR
-    call KillFM
-
-    PollPCM
+    dec b
     
     ld a, b                       ; Restore BGM FM instrument
     ld h, RAM_BGMFMInstr>>8
@@ -292,31 +280,23 @@ ClearSFX:
     PollPCM
     
     push bc
-    ld a, b                       ; Restore BGM FM volume
-    add RAM_BGMFMVol&$FF
+    ld a, l                       ; Restore BGM FM volume
+    add 8
     ld l, a
     ld a, b
     ld b, (hl)
     call SetFMVolLoad
     pop bc
     
-    ld a, b
-    and $04
-    rrca
-    ld iyl, a
-    
-    push bc                       ; Restore BGM FM panning
-    ld a, b
-    ld h, RAM_BGMFMPan>>8
-    add RAM_BGMFMPan&$FF
+    ld a, l                       ; Restore BGM FM panning
+    add 8
     ld l, a
     ld a, b
-    ld b, (hl)
     and $03
     add $B4
-    ld (iy+0), b
+    ld (iy+0), a
+    ld a, (hl)
     ld (iy+1), a
-    pop bc
 
     PollPCM
     inc b
