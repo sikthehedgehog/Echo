@@ -45,6 +45,8 @@ RAM_Scratch:        ds 32           ; Scratch bytes, may be useful when
                                       ; buffering to speed up to avoid bank
                                       ; switching conflicts
 
+RAM_NoteData:       ds 32             ; Current channel statuses
+                                      
 ;****************************************************************************
 ; Pointer list starts being stored from here
 ; $300 (768) bytes are needed to store the pointer list
@@ -65,7 +67,7 @@ RAM_PointerList: equ $1C00
 
 RAM_Stack:          equ $1FF0       ; Where stack starts
 
-RAM_Status:         equ $1FF0       ; Current playback status
+RAM_Status:         equ $1FF0
 RAM_Command:        equ $1FFF       ; Command type
 RAM_ComAddr:        equ $1FFD       ; Command address parameter
 RAM_ComBank:        equ $1FFC       ; Command bank parameter

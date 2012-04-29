@@ -27,7 +27,21 @@ NoteOnFMBGM:
     jp ProcessBGMRun            ; End of subroutine
 
 NoteOnFM:
+    push hl                     ; Write status
+    ld a, b
     and $07                     ; Get channel ID
+    ld hl, RAM_NoteData
+    cp $3
+    jp c, FMAligned             ; Set Adress straight
+    dec a
+FMAligned:
+    add l
+    ld l, a
+    ld (hl), $1
+    ld a, b
+    pop hl
+    
+    and $07
     ld (ix+0), $28              ; Note off
     ld (ix+1), a
 

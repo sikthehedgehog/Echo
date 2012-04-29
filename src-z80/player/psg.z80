@@ -70,8 +70,8 @@ UpdatePSG:
 .notmute:
 
 .skip:
-    PollPCM
 
+    PollPCM
     ld a, b                     ; Set PSG channel volume
     rlca   
     rlca
@@ -83,6 +83,20 @@ UpdatePSG:
     rrca
     or $90
     ld ($7F11), a
+    
+    ;B=CHAN NO
+    ;A= THING DATA
+    
+    push hl
+    push af
+    ld a, b
+    ld hl, RAM_NoteData+6
+    add l
+    ld l, a
+    pop af    
+    and $0F
+    ld (hl), a
+    pop hl
 
     ld a, l                     ; Go for next channel
     sub 16+1
