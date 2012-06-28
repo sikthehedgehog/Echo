@@ -1,0 +1,97 @@
+Quick readme that's going to be here until proper documentation is made.
+
+Echo is licensed under the zlib license. Feel free to use it as long as you
+don't claim you made Echo (no credit needed though). If you modify it don't
+claim it's vanilla Echo either :P
+
+THIS CODE HAS NOT BEEN TESTED YET. I CURRENTLY DON'T HAVE ANY C DEVKIT TO
+VERIFY IT WORKS FINE. I HAVE DONE AS MANY CHECKS AS POSSIBLE (AND IT
+DEFINITELY SHOULD BUILD) BUT I NEED REPORTS TO KNOW IF IT'S WORKING AS
+EXPECTED. SORRY FOR THE INCONVENIENCE.
+
+=============================================================================
+
+To include Echo in your program, you need to include echo.c, echo.h and
+echoblob.h in it (and yes, you can put echo.h as a system file if you want).
+That's pretty much it.
+
+To access the Echo stuff, include echo.h in the source files that need to
+make use of it. It contains all the function definitions and such, as well as
+the macros needed to make the instrument list.
+
+echoblob.h is already included here, but if you want to use a different Z80
+blob from the included one, you can use the blob2c tool. It's a command line
+tool and its usage is pretty simple: blob2c «input.bin» «output.c»
+
+=============================================================================
+
+Echo makes use of an instrument list. There are some macros in echo.h to help
+you make the lists in your C program. Basically, do something like this:
+
+   ECHO_LIST_START(list)
+   ECHO_LIST_ENTRY(instrument1)
+   ECHO_LIST_ENTRY(instrument2)
+   ECHO_LIST_ENTRY(instrument3)
+   ECHO_LIST_ENTRY(instrument4)
+   ECHO_LIST_ENTRY(instrument5)
+   ECHO_LIST_END
+
+Where 'list' is the name the list will have (this creates a standard C
+array). This is the same name you have to pass to echo_init().
+
+Each ECHO_LIST_ENTRY is an instrument, and you pass a pointer to their blob
+data (EIF, EEF, EWF) as the parameter. Put as many ECHO_LIST_ENTRY as
+instruments you want in the list.
+
+Make sure to NOT put semicolons or you'll get weird compiler errors.
+
+=============================================================================
+
+Quick overview of the functions. The functions map 1:1 to their asm
+counterparts, by the way.
+
+   echo_init(list)
+   
+      Initializes Echo. 'list' is a pointer to the instrument list (pass here
+      the name you passed to ECHO_LIST_START). Make sure to call this before
+      doing anything else with Echo.
+   
+   echo_play_bgm(stream)
+   
+      Plays background music. 'stream' is a pointer to the ESF data.
+   
+   echo_stop_bgm()
+   
+      Stops background music playback.
+   
+   echo_play_sfx(stream)
+   
+      Plays a sound effect. 'stream' is a pointer to the ESF data.
+   
+   echo_stop_sfx()
+   
+      Stops sound effect playback.
+   
+   echo_get_status()
+   
+      Gets the current status of Echo. It returns a value which is an OR of
+      the following flags (as appropriate):
+      
+         ECHO_STAT_BGM .... Background music is playing
+         ECHO_STAT_SFX .... Sound effect is playing
+         ECHO_STAT_BUSY ... Echo is busy (can't parse commands yet)
+      
+      And just to make it clear: if you send a command to Echo while it's
+      busy, it won't fail, it'll just make the 68000 wait until Echo is
+      ready. No need to explicitly check for it. Check this only if you want
+      to prevent the 68000 waiting.
+   
+   echo_send_command(command)
+   
+      Lets you send a raw command to Echo. Use this for commands not taking
+      parameters.
+   
+   echo_send_command_ex(command, address)
+   
+      Lets you send a raw command to Echo. Use this for commands that take an
+      address as a parameter.

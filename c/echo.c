@@ -1,0 +1,183 @@
+// Required headers
+#include <stdint.h>
+#include "echoblob.h"
+#include "echo.h"
+
+// Z80 addresses
+static volatile uint8_t*  const z80_ram    = (uint8_t *)  0xA00000;
+static volatile uint16_t* const z80_busreq = (uint16_t *) 0xA11100;
+static volatile uint16_t* const z80_reset  = (uint16_t *) 0xA11200;
+
+// Macros to control the Z80
+#define Z80_REQUEST() \
+   { *z80_busreq = 0x100; while (*z80_busreq & 0x100); }
+#define Z80_RELEASE() \
+   { *z80_busreq = 0; }
+#define Z80_RESET() \
+   { *z80_reset = 0; \
+     int16_t i; for (i = 8; i >= 0; i--); \
+     *z80_reset = 0x100; }
+
+//***************************************************************************
+// echo_init
+// Initializes Echo and gets it running.
+//---------------------------------------------------------------------------
+// param list: pointer to instrument list
+//***************************************************************************
+
+void echo_init(const void *list) {
+   // Take over the Z80
+   Z80_RESET();
+   Z80_REQUEST();
+   
+   // Tell Echo to load the pointer list as soon as it starts
+   uint32_t param = (uint32_t) list;
+   z80_ram[0x1FFF] = ECHO_CMD_LOADLIST;
+   z80_ram[0x1FFD] = param;
+   param >>= 8;
+   z80_ram[0x1FFE] = param | 0x80;
+   param >>= 8;
+   param = (param & 0x7F) | (param >> 1 & 0x80);
+   z80_ram[0x1FFC] = param;
+   
+   // Copy the Echo blob into Z80 RAM
+   // No, memcpy() won't do here since we must ensure accesses are byte-sized
+   // (memcpy() may not know this and try word or long accesses)
+   const uint8_t *src = echo_blob;
+   volatile uint8_t *dest = z80_ram;
+   int16_t count = sizeof(echo_blob)-1;
+   while (count >= 0)
+      *dest++ = *src++;
+   
+   // Let Echo start running!
+   Z80_RESET();
+   Z80_RELEASE();
+}
+
+//***************************************************************************
+// echo_send_command
+// Sends a raw command to Echo. No parameters are taken.
+//---------------------------------------------------------------------------
+// param cmd: command to send
+//***************************************************************************
+
+void echo_send_command(unsigned char cmd) {
+   // We need access to Z80 bus
+   Z80_REQUEST();
+   
+   // Is Echo busy yet?
+   while (z80_ram[0x1FFF] != 0x00) {
+      Z80_RELEASE();
+      int16_t i;
+      for (i = 0x3FF; i >= 0; i--);
+      Z80_REQUEST();
+   }
+   
+   // Write the command
+   z80_ram[0x1FFF] = cmd;
+
+   // Done with the Z80
+   Z80_RELEASE();
+}
+
+//***************************************************************************
+// echo_send_command_ex
+// Sends a raw command to Echo. An address parameter is taken.
+//---------------------------------------------------------------------------
+// param cmd: command to send
+// param addr: address parameter
+//***************************************************************************
+
+void echo_send_command_ex(unsigned char cmd, const void *addr) {
+   // Since we need to split the address into multiple bytes we put it in an
+   // integer. This is a bad practice in general, period, but since we don't
+   // care about portability here we can afford to do it this time.
+   uint32_t param = (uint32_t) addr;
+   
+   // We need access to Z80 bus
+   Z80_REQUEST();
+   
+   // Is Echo busy yet?
+   while (z80_ram[0x1FFF] != 0x00) {
+      Z80_RELEASE();
+      int16_t i;
+      for (i = 0x3FF; i >= 0; i--);
+      Z80_REQUEST();
+   }
+   
+   // Write the command
+   z80_ram[0x1FFF] = cmd;
+   z80_ram[0x1FFD] = param;
+   param >>= 8;
+   z80_ram[0x1FFE] = param | 0x80;
+   param >>= 8;
+   param = (param & 0x7F) | (param >> 1 & 0x80);
+   z80_ram[0x1FFC] = param;
+
+   // Done with the Z80
+   Z80_RELEASE();
+}
+
+//***************************************************************************
+// echo_play_bgm
+// Starts playing background music.
+//---------------------------------------------------------------------------
+// param ptr: pointer to BGM stream
+//***************************************************************************
+
+void echo_play_bgm(const void *ptr) {
+   echo_send_command_ex(ECHO_CMD_PLAYBGM, ptr);
+}
+
+//***************************************************************************
+// echo_stop_bgm
+// Stops background music playback.
+//***************************************************************************
+
+void echo_stop_bgm(void) {
+   echo_send_command(ECHO_CMD_STOPBGM);
+}
+
+//***************************************************************************
+// echo_play_sfx
+// Starts playing a sound effect.
+//---------------------------------------------------------------------------
+// param ptr: pointer to SFX stream
+//***************************************************************************
+
+void echo_play_sfx(const void *ptr) {
+   echo_send_command_ex(ECHO_CMD_PLAYSFX, ptr);
+}
+
+//***************************************************************************
+// echo_stop_sfx
+// Stops sound effect playback.
+//***************************************************************************
+
+void echo_stop_sfx(void) {
+   echo_send_command(ECHO_CMD_STOPSFX);
+}
+
+//***************************************************************************
+// echo_get_status
+// Retrieves Echo's current status.
+//---------------------------------------------------------------------------
+// return: status flags (see ECHO_STAT_*)
+//***************************************************************************
+
+unsigned short echo_get_status(void) {
+   // We need access to the Z80
+   Z80_REQUEST();
+   
+   // Retrieve status from Z80 RAM
+   uint16_t status = 0;
+   status = z80_ram[0x1FF0];
+   if (z80_ram[0x1FFF] != 0)
+      status |= ECHO_STAT_BUSY;
+   
+   // Done with the Z80
+   Z80_RELEASE();
+   
+   // Return status
+   return status;
+}

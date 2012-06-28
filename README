@@ -22,6 +22,17 @@ tl;dr use Echo at your own risk :|
 
 -----------------------------------------------------------------------------
 
+If you want to use Echo from asm, take the blob from "bin/prog-z80.bin" and
+the "src-68k/sound/echo.68k" asm file. Include the latter in your source
+code, then go to the @Z80Program label and replace the string with the path
+to the blob.
+
+If you want to use Echo from C, check the "c" subdirectory. You will find the
+required files. It should work with any Mega Drive C devkit that provides the
+stdint.h header (and you should ditch it if it doesn't!).
+
+-----------------------------------------------------------------------------
+
 Echo official "site" (currently just redirects to the git repo):
 http://echo.mdscene.net/
 
@@ -46,7 +57,7 @@ How to build:
 
    * Make sure the root of this source code tree is the current directory
    * Assemble src-z80/build.z80 to bin/prog-z80.bin
-   * Assemble src-68k/build.68k to bin/prog-68k.bin
+   * Assemble src-68k/build.68k to bin/prog-68k.bin (optional)
 
    Sorry for not providing a build script but my current setup is a mess and
    needs to be changed x_x; Currently using z80-asm to build the Z80 code and
