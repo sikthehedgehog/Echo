@@ -1,12 +1,11 @@
 *****************************************************************************
 JUST TO MAKE IT CLEAR: THE TEXT BELOW IS NOT LEGAL BINDING, IT'S JUST A
 WARNING THAT ECHO ISN'T STABLE, OK? THE PROPER LICENSE IS ZLIB'S AND THAT'S
-WHAT YOU SHOULD CONSIDER IT LIKE RIGHT NOW.
+WHAT YOU SHOULD CONSIDER.
 
 To see the license, check the LICENSE file. (to-do: add the notice to the
 source files - license is still relevant!)
 *****************************************************************************
-
  _   _   _   _____   _____   _   _   _   _   _   _____
 | | | | | | |  _  | |  _  | | \ | | | | | \ | | |  ___|
 | | | | | | | |_| | | |_| | |  \| | | | |  \| | | | __
@@ -14,12 +13,14 @@ source files - license is still relevant!)
 | |_| |_| | | | | | | |\ \  | |\  | | | | |\  | | |_| |
 |____.____| |_| |_| |_| \_\ |_| \_| |_| |_| \_| |___._|
 
-This is a VERY unstable and unfinished version of Echo. It isn't anywhere
-ready for use in production code, and it's up here only so other people can
-help with development. This also means this git will be a mess until it's
-ready for use.
+This is NOT a final version. This version is quite stable right now, and
+conversion tools will cope up with any shenanigans that can happen due to
+currently undefined behavior, but don't get surprised if something ends up
+being broken.
 
-tl;dr DON'T USE ECHO YET :|
+tl;dr use Echo at your own risk :|
+
+-----------------------------------------------------------------------------
 
 Echo tools are available as part of the mdtools set:
 https://github.com/sikthehedgehog/mdtools
