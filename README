@@ -68,6 +68,11 @@ How to build:
    have more control over those tools at least so I may come up with good
    replacements (or even just rebuild the current tools, pretty sure one of
    them (mdtiler) already has a replacement) :/
+   
+   The last step builds the Echo tester ROM, which is some generic ROM I use
+   to test the tools and some other stuff I make, and generally contains
+   garbage tunes in it you shouldn't pay attention to. You don't have to
+   build it to make use of Echo :P
 
 -----------------------------------------------------------------------------
 
