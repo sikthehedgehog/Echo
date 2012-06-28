@@ -1,9 +1,10 @@
 *****************************************************************************
 JUST TO MAKE IT CLEAR: THE TEXT BELOW IS NOT LEGAL BINDING, IT'S JUST A
-WARNING THAT ECHO ISN'T STABLE, OK? THE PROPER LICENSE WILL BE ZLIB'S AND
-THAT'S WHAT YOU SHOULD CONSIDER IT LIKE RIGHT NOW.
+WARNING THAT ECHO ISN'T STABLE, OK? THE PROPER LICENSE IS ZLIB'S AND THAT'S
+WHAT YOU SHOULD CONSIDER IT LIKE RIGHT NOW.
 
-(note to self: put the zlib license here)
+To see the license, check the LICENSE file. (to-do: add the notice to the
+source files - license is still relevant!)
 *****************************************************************************
 
  _   _   _   _____   _____   _   _   _   _   _   _____
