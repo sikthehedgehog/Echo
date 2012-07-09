@@ -46,7 +46,7 @@ void echo_init(const void *list) {
    const uint8_t *src = echo_blob;
    volatile uint8_t *dest = z80_ram;
    int16_t count = sizeof(echo_blob)-1;
-   while (count >= 0)
+   while (count-- >= 0)
       *dest++ = *src++;
    
    // Let Echo start running!
