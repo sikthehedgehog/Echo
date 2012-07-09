@@ -25,25 +25,24 @@ tool and its usage is pretty simple: blob2c «input.bin» «output.c»
 
 =============================================================================
 
-Echo makes use of an instrument list. There are some macros in echo.h to help
-you make the lists in your C program. Basically, do something like this:
+Echo makes use of an instrument list. In the case of the C version of Echo,
+you need to make a null-terminated pointer list, e.g. as follows:
 
-   ECHO_LIST_START(list)
-   ECHO_LIST_ENTRY(instrument1)
-   ECHO_LIST_ENTRY(instrument2)
-   ECHO_LIST_ENTRY(instrument3)
-   ECHO_LIST_ENTRY(instrument4)
-   ECHO_LIST_ENTRY(instrument5)
-   ECHO_LIST_END
+const void *list[] = {
+   instrument1,
+   instrument2,
+   instrument3,
+   instrument4,
+   instrument5,
+   NULL
+};
 
-Where 'list' is the name the list will have (this creates a standard C
-array). This is the same name you have to pass to echo_init().
+Where 'list' is the name the list will have. This is the same name you have
+to pass to echo_init(). 'instrument1' etc. are pointers to the data of each
+instrument (EIF, EEF, EWF).
 
-Each ECHO_LIST_ENTRY is an instrument, and you pass a pointer to their blob
-data (EIF, EEF, EWF) as the parameter. Put as many ECHO_LIST_ENTRY as
-instruments you want in the list.
-
-Make sure to NOT put semicolons or you'll get weird compiler errors.
+If NULL isn't defined for whatever reason either include stddef.h or just use
+0 instead (which is the same value).
 
 =============================================================================
 
