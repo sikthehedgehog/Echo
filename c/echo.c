@@ -25,26 +25,42 @@ static volatile uint16_t* const z80_reset  = (uint16_t *) 0xA11200;
 // param list: pointer to instrument list
 //***************************************************************************
 
-void echo_init(const void *list) {
+void echo_init(const void **list) {
    // Take over the Z80
    Z80_RESET();
    Z80_REQUEST();
    
-   // Tell Echo to load the pointer list as soon as it starts
-   uint32_t param = (uint32_t) list;
-   z80_ram[0x1FFF] = ECHO_CMD_LOADLIST;
-   z80_ram[0x1FFD] = param;
-   param >>= 8;
-   z80_ram[0x1FFE] = param | 0x80;
-   param >>= 8;
-   param = (param & 0x7F) | (param >> 1 & 0x80);
-   z80_ram[0x1FFC] = param;
+   // Tell Echo to not run any commands by default (the assembly counterpart
+   // would tell it to load the instrument list, but we can't do that here
+   // due to linker shenanigans)
+   z80_ram[0x1FFF] = 0x00;
+   
+   // Load the instrument list manually, since thanks to linker shenanigans
+   // we can't implement the list properly in ROM :/
+   volatile uint8_t *dest = &z80_ram[0x1C00];
+   while (*list) {
+      // Retrieve pointer to next instrument
+      // Cast it to an integer since we need to treat it as such
+      // This should be considered bad C, but since this is hardware-specific
+      // code this should be fine to do (portability is not expected)
+      uint32_t ptr = (uint32_t) *list;
+      
+      // Turn the pointer into the base+address notation Echo wants and store
+      // it in Z80 RAM directly (where the list would go)
+      dest[0x000] = (ptr >> 8 & 0x7F) | 0x80;
+      dest[0x100] = (ptr & 0xFF);
+      dest[0x200] = (ptr >> 15 & 0x7F) | (ptr >> 16 & 0x80);
+      
+      // Go for next pointer
+      list++;
+      dest++;
+   }
    
    // Copy the Echo blob into Z80 RAM
    // No, memcpy() won't do here since we must ensure accesses are byte-sized
    // (memcpy() may not know this and try word or long accesses)
    const uint8_t *src = echo_blob;
-   volatile uint8_t *dest = z80_ram;
+   dest = z80_ram;
    int16_t count = sizeof(echo_blob)-1;
    while (count-- >= 0)
       *dest++ = *src++;
