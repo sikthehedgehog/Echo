@@ -31,10 +31,6 @@ EntryPoint:
     ld (hl), l
     ld (hl), l
 
-    ;ex af, af'                  ; Set 9th bank bit to 0 by default
-    ;xor a                       ; (0 = $000000-$7FFFFF range aka MD mode)
-    ;ex af, af'                  ; (1 = $800000-$FFFFFF range aka 32X mode)
-
     ld ix, $4000                ; YM2612 I/O ports base address
     ld iyh, $40
 
@@ -120,6 +116,8 @@ RunCommand:
     jp z, PlayBGM
     dec a                       ; Command $05: stop BGM
     jp z, StopBGMCmd
+    dec a                       ; Command $06: resume BGM
+    jp z, ResumeBGM
 
     PollPCM
 

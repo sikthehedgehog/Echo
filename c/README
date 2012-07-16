@@ -63,6 +63,10 @@ counterparts, by the way.
    
       Stops background music playback.
    
+   echo_resume_bgm()
+   
+      Resumes background music playback (useful for unpausing).
+   
    echo_play_sfx(stream)
    
       Plays a sound effect. 'stream' is a pointer to the ESF data.

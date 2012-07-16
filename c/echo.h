@@ -8,7 +8,8 @@ enum {
    ECHO_CMD_PLAYSFX,       /* 0x02 - Play a SFX */
    ECHO_CMD_STOPSFX,       /* 0x03 - Stop SFX playback */
    ECHO_CMD_PLAYBGM,       /* 0x04 - Play a BGM */
-   ECHO_CMD_STOPBGM        /* 0x05 - Stop BGM playback */
+   ECHO_CMD_STOPBGM,       /* 0x05 - Stop BGM playback */
+   ECHO_CMD_RESUMEBGM      /* 0x06 - Resume BGM playback */
 };
 
 /* Echo status flags */
@@ -20,6 +21,7 @@ enum {
 void echo_init(const void **);
 void echo_play_bgm(const void *);
 void echo_stop_bgm(void);
+void echo_resume_bgm(void);
 void echo_play_sfx(const void *);
 void echo_stop_sfx(void);
 unsigned short echo_get_status(void);

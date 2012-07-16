@@ -755,3 +755,48 @@ KillFM:
 
     PollPCM
     ret                         ; End of subroutine
+
+;****************************************************************************
+; RestoreFM
+; Restores a FM channel (from BGM information)
+;----------------------------------------------------------------------------
+; input b ... FM channel (0..7)
+;----------------------------------------------------------------------------
+; breaks: af, hl
+;****************************************************************************
+
+RestoreFM:
+    ld a, b                       ; Restore BGM FM instrument
+    ld h, RAM_BGMFMInstr>>8
+    add RAM_BGMFMInstr&$FF
+    ld l, a
+    
+    push bc
+    ld a, b
+    ld b, (hl)
+    call LoadFMDirect
+    pop bc
+    
+    PollPCM
+    
+    push bc
+    ld a, l                       ; Restore BGM FM volume
+    add 8
+    ld l, a
+    ld a, b
+    ld b, (hl)
+    call SetFMVolLoad
+    pop bc
+    
+    ld a, l                       ; Restore BGM FM panning
+    add 8
+    ld l, a
+    ld a, b
+    and $03
+    add $B4
+    ld (iy+0), a
+    ld a, (hl)
+    ld (iy+1), a
+
+    PollPCM
+    ret                         ; End of subroutine

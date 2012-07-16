@@ -209,17 +209,35 @@ Echo_StopBGM:
     rts                             ; End of subroutine
 
 ;****************************************************************************
+; Echo_ResumeBGM
+; Resumes BGM playback
+;****************************************************************************
+
+Echo_ResumeBGM:
+    move.w  d0, -(sp)               ; Save register
+    move.b  #$06, d0                ; Command $06 = resume BGM
+    bsr     Echo_SendCommand        ; Send command to Echo
+    move.w  (sp)+, d0               ; Restore register
+    rts                             ; End of subroutine
+
+;****************************************************************************
 ; Echo_GetStatus
 ; Gets the current status of Echo
 ;
-; output d0.b ... Echo status
+; output d0.w ... Echo status
 ;                   Bit #0: SFX is playing
 ;                   Bit #1: BGM is playing
+;                   Bit #15: command still not parsed
 ;****************************************************************************
 
 Echo_GetStatus:
+    moveq   #0, d0
     Echo_Z80Request                 ; We need the Z80 bus
-    move.b  ($A01FF0), d0           ; Just get the status
+    move.b  ($A01FF0), d0           ; Get the status flags
+    tst.b   ($A01FFF)               ; Check if command still has to be parsed
+    beq.s   @NotBusy                ; Any commands left to be parsed?
+    bset.l  #15, d0                 ; If so, set the relevant flag
+@NotBusy:
     Echo_Z80Release                 ; Let the Z80 go!
     rts                             ; End of subroutine
 

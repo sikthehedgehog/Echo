@@ -1,6 +1,8 @@
 ;****************************************************************************
 ; PlayBGM [command $04]
 ; Plays a BGM
+;----------------------------------------------------------------------------
+; breaks: all
 ;****************************************************************************
 
 PlayBGM:
@@ -39,6 +41,54 @@ PlayBGM:
 
     PollPCM
 
+    ld hl, ProcessBGM           ; Tell Echo to process BGM
+    ld (DoTick_BGM+1), hl
+    
+    jp IdleLoop                 ; End of subroutine
+
+;****************************************************************************
+; ResumeBGM [command $06]
+; Resumes a stopped BGM
+;----------------------------------------------------------------------------
+; breaks: all
+;****************************************************************************
+
+ResumeBGM:
+    xor a                       ; Command parsed
+    ld (RAM_Command), a
+
+;----------------------------------------------------------------------------
+    
+    ld b, 8                     ; Restore all FM channels
+    ld de, RAM_Locked+7
+.restorefm:
+
+    PollPCM
+
+    ld a, (de)                    ; Check if this channel is locked
+    or a
+    jp nz, .fmlocked
+
+    PollPCM
+    
+    dec b                         ; Restore FM channel
+    call RestoreFM
+    inc b
+    
+.fmlocked:
+    dec e                         ; Go for next channel to restore
+    dec b
+    jp nz, .restorefm
+
+;----------------------------------------------------------------------------
+
+    ld a, (RAM_Status)          ; Show BGM playback in Echo's status
+    or $02
+    ld (RAM_Status), a
+
+    ld hl, RAM_BGMData          ; Set BGM as playing
+    ld (hl), $01
+    
     ld hl, ProcessBGM           ; Tell Echo to process BGM
     ld (DoTick_BGM+1), hl
     
