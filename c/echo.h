@@ -13,8 +13,8 @@ enum {
 };
 
 /* Echo status flags */
-#define ECHO_STAT_BGM      0x0001   /* Background music is playing */
-#define ECHO_STAT_SFX      0x0002   /* Sound effect is playing */
+#define ECHO_STAT_BGM      0x0002   /* Background music is playing */
+#define ECHO_STAT_SFX      0x0001   /* Sound effect is playing */
 #define ECHO_STAT_BUSY     0x8000   /* Echo still didn't parse command */
 
 /* Function prototypes */
