@@ -126,7 +126,7 @@ void echo_send_command_ex(unsigned char cmd, const void *addr) {
    z80_ram[0x1FFD] = param;
    param >>= 8;
    z80_ram[0x1FFE] = param | 0x80;
-   param >>= 8;
+   param >>= 7;
    param = (param & 0x7F) | (param >> 1 & 0x80);
    z80_ram[0x1FFC] = param;
 
