@@ -1,0 +1,22 @@
+Echo_ProgFile equs "bin/prog-z80.bin"
+
+    include "tester/core/header.68k"
+    include "tester/core/entry.68k"
+    include "tester/core/menu.68k"
+    include "tester/core/songlist.68k"
+
+    include "tester/video/text.68k"
+    include "tester/video/bg.68k"
+    include "tester/video/vsync.68k"
+
+    include "tester/input/joypad.68k"
+
+    include "tester/sound/echo.68k"
+    include "tester/sound/esf.68k"
+    include "tester/sound/list.68k"
+    include "tester/sound/bgms.68k"
+    include "tester/sound/sfxs.68k"
+
+    cnop    0, $8000
+
+    include "tester/core/vars.68k"
