@@ -225,69 +225,33 @@ LoadList:
     xor a                       ; Command parsed
     ld (RAM_Command), a
 
-    ld a, c                     ; Do initial bank switch
-    ld de, $6000
-    ex de, hl
-    BankSwitch
-    ex de, hl
-
     ld de, RAM_PointerList      ; Where the pointer list starts
 
 .loop:
-    ld a, (hl)                  ; Get high address byte
-    or a                        ; Is it the end of the list?
-    jp z, .end                    ; If so, stop parsing list
-    ld (de), a                  ; Nope, store it in list
-
-    inc d                       ; Get address for next byte
-    inc l
-    jr nz, .noswitch1
-    inc h
-    jr nz, .noswitch1
-    inc c
-    ld a, c
-    ld h, $60
-    BankSwitch
-    ld h, $80
-.noswitch1:
-
-    ld a, (hl)                  ; Get low address byte
-    ld (de), a                  ; Store it in pointer list
-
-    inc d                       ; Get address for next byte
-    inc l
-    jr nz, .noswitch2
-    inc h
-    jr nz, .noswitch2
-    inc c
-    ld a, c
-    ld h, $60
-    BankSwitch
-    ld h, $80
-.noswitch2:
-
-    ld a, (hl)                  ; Get bank byte
-    ld (de), a                  ; Store it in pointer list
-
-    dec d                       ; Get address for next byte
+    call GetParam               ; Get high byte address
+    
+    ld a, b                     ; Is it the end of the list?
+    or a
+    jp z, .end
+    
+    ld (de), a                  ; Store high byte address
+    inc d
+    
+    call GetParam               ; Get low address byte
+    ld a, b
+    ld (de), a
+    inc d
+    
+    call GetParam               ; Get bank byte
+    ld a, b
+    ld (de), a
+    
+    dec d                       ; Go for next byte
     dec d
     inc e
-    inc l
-    jr nz, .noswitch3
-    inc h
-    jr nz, .noswitch3
-    inc c
-    ld a, c
-    ld h, $60
-    BankSwitch
-    ld h, $80
-.noswitch3:
-
-    jp .loop                    ; Go for next byte
+    jp .loop
 
 .end:
-    ld a, c                     ; Store current bank
-    ld (RAM_LastBank), a
     jp IdleLoop                 ; End of subroutine
 
 ;****************************************************************************
@@ -306,8 +270,6 @@ GetParam:
     exx
 .noswitchp:
     ld b, (hl)                  ; Get volume
-
-    ;PollPCM
 
     inc l                       ; Get next address
     jp nz, .nonewbankp

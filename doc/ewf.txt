@@ -1,0 +1,15 @@
+=============================================================================
+
+OVERVIEW
+
+    EWF stands for "Echo Waveform Format" and it's the format in which PCM
+    instruments are stored.
+
+FORMAT
+
+    There isn't much to it. PCM data is stored as unsigned 8-bit, 10250 Hz,
+    mono. The bytes specifying the waveform data contain values ranging from
+    $00 to $FE. When a byte with value $FF is found, this is the end of the
+    waveform.
+
+=============================================================================

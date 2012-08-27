@@ -1,6 +1,9 @@
 #ifndef ECHO_H
 #define ECHO_H
 
+/* Required headers */
+#include <stdint.h>
+
 /* Echo commands */
 enum {
    ECHO_CMD_NONE,          /* 0x00 - No command */
@@ -24,8 +27,8 @@ void echo_stop_bgm(void);
 void echo_resume_bgm(void);
 void echo_play_sfx(const void *);
 void echo_stop_sfx(void);
-unsigned short echo_get_status(void);
-void echo_send_command(unsigned char);
-void echo_send_command_ex(unsigned char, const void *);
+uint16_t echo_get_status(void);
+void echo_send_command(uint8_t);
+void echo_send_command_ex(uint8_t, const void *);
 
 #endif

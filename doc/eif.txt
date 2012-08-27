@@ -1,0 +1,27 @@
+=============================================================================
+
+OVERVIEW
+
+    EIF stands for "Echo Instrument Format" and it's the format in which FM
+    instruments are stored.
+
+FORMAT
+
+    EIF instruments are essentially raw dumps of the YM2612 registers. They
+    consist of 29 bytes, where each byte belongs to a different YM2612
+    register. The registers are stored in the following order (assuming the
+    first FM channel):
+    
+        $B4                     -- Algorithm and feedback
+        $30, $34, $38, $3C      -- Multiplier and detune
+        $40, $44, $48, $4C      -- Total level
+        $50, $54, $58, $5C      -- Attack rate
+        $60, $64, $68, $6C      -- Decay rate
+        $70, $74, $78, $7C      -- Sustain rate
+        $80, $84, $88, $8C      -- Release rate and sustain level
+        $90, $94, $98, $9C      -- SSG-EG
+    
+    Some bits are unused and ignored by the YM2612. In an EIF instrument,
+    they *must* be 0, since Echo will rely on this for optimization purposes.
+
+=============================================================================

@@ -1,0 +1,35 @@
+=============================================================================
+
+OVERVIEW
+
+    EEF stands for "Echo Envelope Format" and it's the format in which PSG
+    instruments are stored.
+
+FORMAT
+
+    EEF instruments consist of a list of volume levels. Each byte represents
+    a different volume level, and the value ranges from $00 (loudest) to $0F
+    (quietest). Each byte represents one tick (i.e. 1/60th of a second).
+    
+    Looping is possible. The start of the loop is marked by a byte with value
+    $FE, while the end of the loop is marked by a byte with value $FF. There
+    must be at least one volume byte between them or Echo will hang.
+    
+    To make a non-looping PSG instrument, just put the last volume value
+    inside the loop.
+
+=============================================================================
+
+NOTES
+
+    Yes, this format was kind of an afterthought. Later I may improve it to
+    provide at least some kind of RLE-like compression, but for now you'll
+    have to stick with this :P
+    
+    Also, since PSG instruments are required to use PSG channels and I know
+    many of you don't want to mess with them at all, here's a flat PSG
+    instrument (i.e. no envelope):
+    
+        $FE,$00,$FF
+
+=============================================================================

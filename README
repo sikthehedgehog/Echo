@@ -1,101 +1,97 @@
-*****************************************************************************
-JUST TO MAKE IT CLEAR: THE TEXT BELOW IS NOT LEGAL BINDING, IT'S JUST A
-WARNING THAT ECHO ISN'T STABLE, OK? THE PROPER LICENSE IS ZLIB'S AND THAT'S
-WHAT YOU SHOULD CONSIDER.
+=============================================================================
+        ___________       ________     ___       ___     _________
+       |    _______|    _|   ___  |_  |   |     |   |  _|  _____  |_
+       |   |          _|   _|   |___| |   |     |   | |   |     |   |
+       |   |_____    |    |           |   |_____|   | |   |     |   |
+       |    _____|   |    |           |    _____    | |   |     |   |
+       |   |         |_   |_     ___  |   |     |   | |   |     |   |
+       |   |_______    |_   |___|  _| |   |     |   | |_  |_____|  _|
+       |___________|     |________|   |___|     |___|   |_________|
+    ___ ___ _ _ ___ __    ___ ___ ___ _ ___ ___                   _   ___
+   |  _|   | | |   |  \  |  _|   |  _| |   |  _|                 | | |   |
+   | |_| | | | | | | | | | |_| | | |_| | | | |_   _ _ ___ ___    | | | | |
+   |_  | | | | | | | | | |  _| | | | | | | |  _| | | | __| _ \   | | | | |
+    _| | | | | | | | | | | |_| | | | | | | | |_  | | | __|   /_  | |_| | |
+   |___|___|___|_|_|__/  |___|_|_|___|_|_|_|___|  \_/|___|_|_\_| |_|_|___|
 
-To see the license, check the LICENSE file. (to-do: add the notice to the
-source files - license is still relevant!)
-*****************************************************************************
- _   _   _   _____   _____   _   _   _   _   _   _____
-| | | | | | |  _  | |  _  | | \ | | | | | \ | | |  ___|
-| | | | | | | |_| | | |_| | |  \| | | | |  \| | | | __
-| | | | | | |  _  | |    _| |     | | | |     | | ||  |
-| |_| |_| | | | | | | |\ \  | |\  | | | | |\  | | |_| |
-|____.____| |_| |_| |_| \_\ |_| \_| |_| |_| \_| |___._|
+=============================================================================
 
-This is NOT a final version. This version is quite stable right now, and
-conversion tools will cope up with any shenanigans that can happen due to
-currently undefined behavior, but don't get surprised if something ends up
-being broken.
+Echo is available under the zlib license. Please see the LICENSE file for
+details. All files here as-is are made available under that license unless
+explicitly stated otherwise.
 
-tl;dr use Echo at your own risk :|
+Echo official "site" (currently redirects to the repo):
+http://echo.mdscene.net/
 
------------------------------------------------------------------------------
+mdtools repo (includes several tools for use with Echo):
+http://tools.mdscene.net/
 
-If you want to use Echo from asm, take the blob from "bin/prog-z80.bin" and
+Some more tools from Oerg866 (XM to ESF converter and ESF optimizer):
+https://github.com/oerg866/xm2esf
+
+=============================================================================
+
+*** How to use ***
+
+If you want to use Echo from asm, take the blob from "built/prog-z80.bin" and
 the "src-68k/echo.68k" asm file. Include the latter in your source code, then
-go to the @Z80Program label and replace the string with the path to the blob.
+go to the @Z80Program label (should be near the end of the file) and replace
+the string with the path to the blob.
 
 If you want to use Echo from C, check the "c" subdirectory. You will find the
 required files. It should work with any Mega Drive C devkit that provides the
 stdint.h header (and you should ditch it if it doesn't!).
 
------------------------------------------------------------------------------
+The documentation for the asm API is in "doc/api-asm.txt", while the
+documentation for the C API is in "doc/c-api.txt".
 
-Echo official "site" (currently just redirects to the git repo):
-http://echo.mdscene.net/
+=============================================================================
 
-Echo tools are available as part of the mdtools set:
-https://github.com/sikthehedgehog/mdtools
-
-Also Oerg made a xm2esf tool, and an ESF optimization tool:
-https://github.com/oerg866/xm2esf
-
------------------------------------------------------------------------------
-
-Current version: 0.9
-
-   And yes, I know the source code is a mess, I need to clean it up severely.
-   Also I know some stuff could be done better (e.g. buffering PCM instead of
-   reading each byte from ROM every time), but leaving that for after the
-   first official release, don't fix what isn't broken -_-'
-
------------------------------------------------------------------------------
-
-How to build:
+*** How to build ***
 
    * Make sure the root of this source code tree is the current directory
    * Assemble src-z80/build.z80 to bin/prog-z80.bin
    * Assemble tester/build.68k to bin/prog-68k.bin (optional)
 
-   Sorry for not providing a build script but my current setup is a mess and
-   needs to be changed x_x; Currently using z80-asm to build the Z80 code and
-   asm68k to build the 68000 code, I need to find good replacements for both
-   (z80-asm for being crappy, asm68k for not being free).
-   
-   Also no source for the data blobs yet, for similar reasons, although I
-   have more control over those tools at least so I may come up with good
-   replacements (or even just rebuild the current tools, pretty sure one of
-   them (mdtiler) already has a replacement) :/
-   
-   The last step builds the Echo tester ROM, which is some generic ROM I use
-   to test the tools and some other stuff I make, and generally contains
-   garbage tunes in it you shouldn't pay attention to. You don't have to
-   build it to make use of Echo :P
+Sorry for not providing a build script but my current setup is a mess and
+needs to be changed x_x; Currently using z80-asm to build the Z80 code and
+asm68k to build the 68000 code, I need to find good replacements for both
+(z80-asm for being crappy, asm68k for not being free).
 
------------------------------------------------------------------------------
+Also no source for the data blobs yet, for similar reasons, although I have
+more control over those tools at least so I may come up with some good
+replacements (or even just rebuild the current tools, pretty sure one of them
+(mdtiler) already has a replacement) :/
 
-Available builds:
+The last step builds the Echo tester ROM, which is some generic ROM I use to
+test the tools and some other stuff I make, and generally contains garbage
+tunes in it you shouldn't pay attention to. You don't have to build it to
+make use of Echo :P
 
-   built/prog-z80.bin
-      Current build of Echo.
+=============================================================================
 
-   built/echo-timer-version-a.bin
-      Timer test. Both timers get reloaded each time they're fired.
-   built/echo-timer-version-b.bin
-      Timer test. Only timer B is reloaded when it fires, timer A is left to
-      loop on its own.
-   built/echo-timer-version-c.bin
-      Timer test. Both timers are left to loop on their own. Code for
-      initializing timer B is wrong so it doesn't work properly.
-   built/echo-timer-version-d.bin
-      What the previous ROM should have been, fixed timer B :|
+*** Making sound effects ***
 
------------------------------------------------------------------------------
+If you are using assembly and don't feel like using the full-blown tools to
+make sound effects, you can use the macros in the "src-68k/esf.68k" file to
+create sound effects. For now there is not documentation for it :/ (check the
+comments in the source file to see the syntax for each macro)
 
-Credits:
+An equivalent C API may be available in the future.
 
-   - Sik (main programmer)
-   - Oerg866 (bug hunter)
+=============================================================================
 
-Testing: TµEE, Eke Eke, MarkeyJester, John Springer, Flygon
+CREDITS:
+
+   Main programmer ........ Sik
+   Auxiliary programmer ... Oerg866
+
+THANKS FOR TESTING:
+
+   * TµEE (general hardware testing)
+   * Eke Eke (timer shenanigans IIRC?)
+   * MarkeyJester (*insert comment here*)
+   * John Springer (you heart his pizza)
+   * Flygon (sorry for your headphones :P)
+
+=============================================================================

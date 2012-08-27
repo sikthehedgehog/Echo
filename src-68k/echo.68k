@@ -33,57 +33,6 @@ Echo_Z80Reset macro
     endm                            ; End of macro
 
 ;****************************************************************************
-; Echo_Init
-; Initializes Echo
-;
-; input a0.l ... Address of pointer list
-;****************************************************************************
-
-Echo_Init:
-    movem.l d0/a0-a1, -(sp)         ; Save registers
-
-    Echo_Z80Reset                   ; May not work without this...
-    Echo_Z80Request                 ; We need the Z80 bus
-
-    move.b  #$01, ($A01FFF)         ; Command: load pointer list
-
-    move.l  a0, d0                  ; Easier to manipulate here
-    move.b  d0, ($A01FFD)           ; Store low address byte
-    lsr.l   #7, d0                  ; Get high address byte
-    lsr.b   #1, d0                    ; We skip one bit
-    bset.l  #7, d0                    ; Point into bank window
-    move.b  d0, ($A01FFE)           ; Store high address byte
-    lsr.w   #8, d0                  ; Get bank byte
-    move.w  d0, d1                    ; Parse 32X bit separately
-    lsr.w   #1, d1                    ; Put 32X bit in place
-    and.b   #$7F, d0                  ; Filter out unused bit from addresses
-    and.b   #$80, d1                  ; Filter out all but 32X bit
-    or.b    d1, d0                    ; Put everything together
-    move.b  d0, ($A01FFC)           ; Store bank byte
-
-    lea     @Z80Program(pc), a0     ; Where Z80 program starts
-    lea     ($A00000), a1           ; Where Z80 RAM starts
-    move.w  #@Z80ProgSize-1, d0     ; Size of Z80 program (DBF adjusted)
-@LoadLoop:                          ; Go through all the program
-    move.b  (a0)+, (a1)+              ; Copy byte into Z80 RAM
-    dbf     d0, @LoadLoop             ; Go for next byte
-
-    Echo_Z80Reset                   ; Now reset for real
-    Echo_Z80Release                 ; Let the Z80 go!
-
-    movem.l (sp)+, d0/a0-a1         ; Restore registers
-    rts                             ; End of subroutine
-
-;****************************************************************************
-; Echo Z80 program
-; It should be located wherever Echo_ProgFile was defined
-;****************************************************************************
-
-@Z80Program: incbin "\Echo_ProgFile"
-@Z80ProgSize equ *-@Z80Program
-    even
-
-;****************************************************************************
 ; Echo_SendCommand
 ; Sends an Echo command (no address parameter)
 ;
@@ -261,3 +210,54 @@ Echo_ListEnd macro
     dc.b    $00                     ; End of list mark
     even                            ; Just in case...
     endm
+
+;****************************************************************************
+; Echo_Init
+; Initializes Echo
+;
+; input a0.l ... Address of pointer list
+;****************************************************************************
+
+Echo_Init:
+    movem.l d0/a0-a1, -(sp)         ; Save registers
+
+    Echo_Z80Reset                   ; May not work without this...
+    Echo_Z80Request                 ; We need the Z80 bus
+
+    move.b  #$01, ($A01FFF)         ; Command: load pointer list
+
+    move.l  a0, d0                  ; Easier to manipulate here
+    move.b  d0, ($A01FFD)           ; Store low address byte
+    lsr.l   #7, d0                  ; Get high address byte
+    lsr.b   #1, d0                    ; We skip one bit
+    bset.l  #7, d0                    ; Point into bank window
+    move.b  d0, ($A01FFE)           ; Store high address byte
+    lsr.w   #8, d0                  ; Get bank byte
+    move.w  d0, d1                    ; Parse 32X bit separately
+    lsr.w   #1, d1                    ; Put 32X bit in place
+    and.b   #$7F, d0                  ; Filter out unused bit from addresses
+    and.b   #$80, d1                  ; Filter out all but 32X bit
+    or.b    d1, d0                    ; Put everything together
+    move.b  d0, ($A01FFC)           ; Store bank byte
+
+    lea     @Z80Program(pc), a0     ; Where Z80 program starts
+    lea     ($A00000), a1           ; Where Z80 RAM starts
+    move.w  #@Z80ProgSize-1, d0     ; Size of Z80 program (DBF adjusted)
+@LoadLoop:                          ; Go through all the program
+    move.b  (a0)+, (a1)+              ; Copy byte into Z80 RAM
+    dbf     d0, @LoadLoop             ; Go for next byte
+
+    Echo_Z80Reset                   ; Now reset for real
+    Echo_Z80Release                 ; Let the Z80 go!
+
+    movem.l (sp)+, d0/a0-a1         ; Restore registers
+    rts                             ; End of subroutine
+
+;****************************************************************************
+; Echo Z80 program
+; It should be located wherever Echo_ProgFile was defined
+;****************************************************************************
+
+@Z80Program: incbin "..."
+@Z80ProgSize equ *-@Z80Program
+    even

@@ -1,0 +1,355 @@
+=============================================================================
+
+OVERVIEW
+
+    ESF stands for "Echo Stream Format". This is the format in which BGM and
+    SFX sequences are stored. Essentially this is the music arrangement data.
+    The format is mostly the same for both BGM and SFX, with just a few
+    exceptions.
+
+FORMAT
+
+    ESF is a streamed format (think MIDI without the useless complexity).
+    It's stored as a sequence of events, where each event takes up between
+    one and three bytes. An event could be something like "note on", "set
+    volume", "stop", etc.
+
+CHANNEL LOCKING
+
+    When both BGM and SFX are being played, it's likely that some channels
+    may get used by both. In this case, Echo will give the SFX privilege over
+    those channels.
+    
+    This is achieved by channel "locking". When the SFX starts, it first
+    locks the channels it needs to use. When the SFX ends, those channels get
+    unlocked. BGM won't play on the locked channels while the SFX is playing.
+
+=============================================================================
+
+EVENT LIST
+
+    $00nn ..... Note on FM channel #1
+    $01nn ..... Note on FM channel #2
+    $02nn ..... Note on FM channel #3
+    $04nn ..... Note on FM channel #4
+    $05nn ..... Note on FM channel #5
+    $06nn ..... Note on FM channel #6
+    $08nn ..... Note on PSG channel #1
+    $09nn ..... Note on PSG channel #2
+    $0Ann ..... Note on PSG channel #3
+    $0Bnn ..... Note on PSG channel #4
+    $0Cnn ..... Note on PCM channel
+    
+    $10 ....... Note off FM channel #1
+    $11 ....... Note off FM channel #2
+    $12 ....... Note off FM channel #3
+    $14 ....... Note off FM channel #4
+    $15 ....... Note off FM channel #5
+    $16 ....... Note off FM channel #6
+    $18 ....... Note off PSG channel #1
+    $19 ....... Note off PSG channel #2
+    $1A ....... Note off PSG channel #3
+    $1B ....... Note off PSG channel #4
+    $1C ....... Note off PCM channel
+    
+    $20nn ..... Set volume FM channel #1
+    $21nn ..... Set volume FM channel #2
+    $22nn ..... Set volume FM channel #3
+    $24nn ..... Set volume FM channel #4
+    $25nn ..... Set volume FM channel #5
+    $26nn ..... Set volume FM channel #6
+    $28nn ..... Set volume PSG channel #1
+    $29nn ..... Set volume PSG channel #2
+    $2Ann ..... Set volume PSG channel #3
+    $2Bnn ..... Set volume PSG channel #4
+    
+    $30nnnn ... Set frequency FM channel #1
+    $31nnnn ... Set frequency FM channel #2
+    $32nnnn ... Set frequency FM channel #3
+    $34nnnn ... Set frequency FM channel #4
+    $35nnnn ... Set frequency FM channel #5
+    $36nnnn ... Set frequency FM channel #6
+    $38nnnn ... Set frequency PSG channel #1
+    $39nnnn ... Set frequency PSG channel #2
+    $3Annnn ... Set frequency PSG channel #3
+    $3Bnn ..... Set noise type PSG channel #4
+    
+    $40nn ..... Set instrument FM channel #1
+    $41nn ..... Set instrument FM channel #2
+    $42nn ..... Set instrument FM channel #3
+    $44nn ..... Set instrument FM channel #4
+    $45nn ..... Set instrument FM channel #5
+    $46nn ..... Set instrument FM channel #6
+    $48nn ..... Set instrument PSG channel #1
+    $49nn ..... Set instrument PSG channel #2
+    $4Ann ..... Set instrument PSG channel #3
+    $4Bnn ..... Set instrument PSG channel #4
+    
+    $E0 ....... [SFX] Lock FM channel #1
+    $E1 ....... [SFX] Lock FM channel #2
+    $E2 ....... [SFX] Lock FM channel #3
+    $E4 ....... [SFX] Lock FM channel #4
+    $E5 ....... [SFX] Lock FM channel #5
+    $E6 ....... [SFX] Lock FM channel #6
+    $E8 ....... [SFX] Lock PSG channel #1
+    $E9 ....... [SFX] Lock PSG channel #2
+    $EA ....... [SFX] Lock PSG channel #3
+    $EB ....... [SFX] Lock PSG channel #4
+    
+    $F0nn ..... Set parameters FM channel #1
+    $F1nn ..... Set parameters FM channel #2
+    $F2nn ..... Set parameters FM channel #3
+    $F4nn ..... Set parameters FM channel #4
+    $F5nn ..... Set parameters FM channel #5
+    $F6nn ..... Set parameters FM channel #6
+    
+    $FC ....... [BGM] Go to loop
+    $FD ....... [BGM] Set loop point
+    $FEnn ..... Delay ticks
+    $FF ....... Stop playback
+
+=============================================================================
+
+$00nn: Note on FM channel #1
+$01nn: Note on FM channel #2
+$02nn: Note on FM channel #3
+$04nn: Note on FM channel #4
+$05nn: Note on FM channel #5
+$06nn: Note on FM channel #6
+
+    These events do a "note on" at the specified FM channel. The event is
+    followed by a byte, which indicates which note to play. The value is as
+    follows, where "octave" ranges from 0 to 7 and "semitone" ranges from 0
+    to 11:
+    
+        32 * octave + 2 * semitone + 1
+
+$08nn: Note on PSG channel #1
+$09nn: Note on PSG channel #2
+$0Ann: Note on PSG channel #3
+
+    These events do a "note on" at the specified square wave PSG channel.
+    The event is followed by a byte, which indicates which note to play. The
+    value is as follows, where "octave" ranges from 0 to 5 and "semitone"
+    ranges from 0 to 11:
+    
+        24 * octave + 2 * semitone
+
+$0Bnn: Note on PSG channel #4
+
+    This event does a "note on" at the noise PSG channel. The event is
+    followed by a byte, which indicates what kind of noise to play. The
+    following values are valid:
+    
+        $00 ... Periodic noise, high pitch
+        $01 ... Periodic noise, medium pitch
+        $02 ... Periodic noise, low pitch
+        $03 ... Periodic noise, PSG3 frequency
+        $04 ... White noise, high pitch
+        $05 ... White noise, medium pitch
+        $06 ... White noise, low pitch
+        $07 ... White noise, PSG3 frequency
+    
+    When using values $03 and $07, the third square wave PSG channel controls
+    the noise frequency. You can change this frequency using the events to
+    change the frequency of that channel (usually you'd use event type $3A).
+
+$0Cnn: Note on PCM channel
+
+    This event does a "note on" at the PCM channel. More specifically, it
+    starts playback of a PCM sample. This event is followed by a byte, that
+    specifies an index in the pointer list indicating where's the sample
+    data. Samples are stored as EWF (Echo Waveform Format).
+    
+    NOTE: FM channel #6 will be disabled. That channel will be re-enabled
+    when PCM playback is over (either because the waveform is over or because
+    the channel is stopped explicitly).
+
+=============================================================================
+
+$10: Note off FM channel #1
+$11: Note off FM channel #2
+$12: Note off FM channel #3
+$14: Note off FM channel #4
+$15: Note off FM channel #5
+$16: Note off FM channel #6
+$18: Note off PSG channel #1
+$19: Note off PSG channel #2
+$1A: Note off PSG channel #3
+$1B: Note off PSG channel #4
+
+    These events do a "note off" at the specified channel.
+
+$1C: Note off PCM channel
+
+    This event does a "note off" at the PCM channel. This means that any PCM
+    playback is immediately stopped. FM channel #6 is immediately enabled as
+    well.
+
+=============================================================================
+
+$20nn: Set volume FM channel #1
+$21nn: Set volume FM channel #2
+$22nn: Set volume FM channel #3
+$24nn: Set volume FM channel #4
+$25nn: Set volume FM channel #5
+$26nn: Set volume FM channel #6
+
+    These events set the volume of a specific FM channel. The event is
+    followed by a byte, which indicates the new volume. A value of $00 is the
+    loudest, a value of $7F is the quietest.
+
+$28nn: Set volume PSG channel #1
+$29nn: Set volume PSG channel #2
+$2Ann: Set volume PSG channel #3
+$2Bnn: Set volume PSG channel #4
+
+    These events set the volume of a specific PSG channel. The event is
+    followed by a byte, which indicates the new volume. A value of $00 is the
+    loudest, a value of $0F is the quietest.
+
+=============================================================================
+
+$30nnnn: Set frequency FM channel #1
+$31nnnn: Set frequency FM channel #2
+$32nnnn: Set frequency FM channel #3
+$34nnnn: Set frequency FM channel #4
+$35nnnn: Set frequency FM channel #5
+$36nnnn: Set frequency FM channel #6
+
+    These events set the raw frequency of a specific FM channel, without
+    triggering a new note. Meant for note slides. The following two bytes
+    specify the new frequency in the same format as the YM2612 expects. The
+    first byte is register +$A4, the second byte is register +$A0.
+    
+    Echo uses the following frequency values for each semitone:
+    
+        C  - 644 | E  - 810 | G# - 1021
+        C# - 681 | F  - 858 | A  - 1081
+        D  - 722 | F# - 910 | A# - 1146
+        D# - 765 | G  - 964 | B  - 1214
+
+$38nnnn: Set frequency PSG channel #1
+$39nnnn: Set frequency PSG channel #2
+$3Annnn: Set frequency PSG channel #3
+
+    These events set the raw frequency of a specific square wave PSG channel,
+    without triggering a new note. Meant for note slides. The following two
+    bytes specify the new frequency, the first byte containing the four least
+    significant bits (LSB aligned), and the next byte containing the six most
+    significant bits (LSB aligned too).
+
+    Echo uses the following frequency values for each semitone:
+    
+           |Oct.0|Oct.1|Oct.2|Oct.3|Oct.4|Oct.5
+        ---|-----|-----|-----|-----|-----|-----
+        C  | 851 | 425 | 212 | 106 |  53 |  26
+        C# | 803 | 401 | 200 | 100 |  50 |  25
+        D  | 758 | 379 | 189 |  94 |  47 |  23
+        D# | 715 | 357 | 178 |  89 |  44 |  22
+        E  | 675 | 337 | 168 |  84 |  42 |  21
+        F  | 637 | 318 | 159 |  79 |  39 |  19
+        F# | 601 | 300 | 150 |  75 |  37 |  18
+        G  | 568 | 284 | 142 |  71 |  35 |  17
+        G# | 536 | 268 | 134 |  67 |  33 |  16
+        A  | 506 | 253 | 126 |  63 |  31 |  15
+        A# | 477 | 238 | 119 |  59 |  29 |  14
+        B  | 450 | 225 | 112 |  56 |  28 |  14
+
+$3Bnn: Set noise type PSG channel #4
+
+    This event works like event $0Bnn, but it doesn't trigger a note attack
+    (i.e. instrument envelope won't be reset, note won't start playing if it
+    wasn't already).
+
+=============================================================================
+
+$40nn: Set instrument FM channel #1
+$41nn: Set instrument FM channel #2
+$42nn: Set instrument FM channel #3
+$44nn: Set instrument FM channel #4
+$45nn: Set instrument FM channel #5
+$46nn: Set instrument FM channel #6
+
+    These events are used to set the instrument to be used by a specific FM
+    channel. The event is followed by a byte, which has an index in the
+    pointer list that indicates where's the FM instrument data. Instruments
+    are stored as EIF (Echo Instrument Format).
+
+$48nn: Set instrument PSG channel #1
+$49nn: Set instrument PSG channel #2
+$4Ann: Set instrument PSG channel #3
+$4Bnn: Set instrument PSG channel #4
+
+    These events are used to set the instrument to be used by a specific PSG
+    channel. The event is followed by a byte, which has an index in the
+    pointer list that indicates where's the PSG instrument data. Instruments
+    are stored as EEF (Echo Envelope Format).
+
+=============================================================================
+
+$E0: Lock FM channel #1 [SFX ONLY]
+$E1: Lock FM channel #2 [SFX ONLY]
+$E2: Lock FM channel #3 [SFX ONLY]
+$E4: Lock FM channel #4 [SFX ONLY]
+$E5: Lock FM channel #5 [SFX ONLY]
+$E6: Lock FM channel #6 [SFX ONLY]
+$E8: Lock PSG channel #1 [SFX ONLY]
+$E9: Lock PSG channel #1 [SFX ONLY]
+$EA: Lock PSG channel #1 [SFX ONLY]
+$EB: Lock PSG channel #1 [SFX ONLY]
+
+    These events are used to "lock" specific channels. When a channel is
+    locked, BGM can't mess up with it. All channels used by a SFX must be
+    locked before they're used. Channels get unlocked when the SFX stream is
+    over.
+    
+    To lock the PCM channel, you need to lock FM channel #6 (event $E6). Echo
+    will behave accordingly.
+
+=============================================================================
+
+$F0: Set parameters FM channel #1
+$F1: Set parameters FM channel #2
+$F2: Set parameters FM channel #3
+$F4: Set parameters FM channel #4
+$F5: Set parameters FM channel #5
+$F6: Set parameters FM channel #6
+
+    These events set up some miscellaneous parameters for the FM channels.
+    The event is followed by a byte, which speficies the new parameters to be
+    used. The format of this byte is as follows:
+    
+        Bit 7 ..... 1 to enable left speaker, 0 to mute it
+        Bit 6 ..... 1 to enable right speaker, 0 to mute it
+        Bit 5-0 ... Must be 0
+
+=============================================================================
+
+$FC: Go to loop [BGM ONLY]
+$FD: Set loop point [BGM ONLY]
+
+    This event are used in BGM streams to loop music. Put event $FD where the
+    loop starts, and then end the stream using event $FC (don't use event
+    $FF). This will tell Echo to loop the song instead of stopping playback.
+
+$FEnn: Delay ticks
+
+    This event is used for timing. It tells Echo to wait a specific amount of
+    ticks before continuing with the stream. A byte follows this event, it's
+    the amount of ticks to wait. If it's $00, then Echo waits 256 ticks
+    instead.
+    
+    If you need to wait more than 256 ticks, you can trigger this event
+    several times in a row. For example, to wait 320 ticks, use this event
+    twice: $FE00FE40 --> 256 ticks + 64 ticks = 320 ticks.
+    
+    One tick lasts 1/60th of a second.
+
+$FF: Stop playback
+
+    This event indicates the end of the stream and tells Echo to stop
+    playback from this stream. If the stream was a SFX, then any locked
+    channels will be unlocked as well.
+
+=============================================================================

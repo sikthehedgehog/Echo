@@ -1,0 +1,120 @@
+=============================================================================
+
+*** How to use ***
+
+Add "echo.c" and "echoblob.h" in your program files. Then include the header
+"echo.h" in whatever source files you need to access the Echo API, i.e.
+
+   #include "echo.h"
+
+(these files are present in the "c" directory)
+
+Then use echo_init to initialize Echo and load the instrument list (see
+below). After that you can use Echo as needed (e.g. call echo_play_bgm to
+start playing music, etc.).
+
+The file "echoblob.h" is the Z80 binary turned into a C array. If you want to
+change the blob, just use the included blob2c tool. It's invoked as follows:
+
+   blob2c «input.bin» «output.h»
+
+=============================================================================
+
+*** Initialization ***
+
+void echo_init(const void **list)
+
+   Initializes Echo. Loads the instrument list, loads the Z80 engine and gets
+   it running. You need to call this before you can use Echo (usually when
+   the program is just starting).
+   
+   The parameter 'list' is a pointer to an array of pointers, where each
+   entry points to the EIF/EEF/EWF data of each instrument. The list ends
+   with a NULL pointer. For example:
+   
+   const void* const list[] = {
+      instrument1,
+      instrument2,
+      instrument3,
+      NULL
+   };
+   
+   (if NULL isn't defined for whatever reason just use 0 instead)
+
+=============================================================================
+
+*** Background music ***
+
+void echo_play_bgm(const void *esf)
+
+   Starts playback of the specified background music. The parameter 'esf'
+   points to the ESF data for the background music.
+
+void echo_stop_bgm()
+
+   Stops playback of background music. Used both to stop and to pause music
+   (the latter can be undone with echo_resume_bgm, see below).
+
+void echo_resume_bgm()
+
+   Resumes playback of whatever background music was playing last time before
+   echo_stop_bgm was called. Used when you want to unpause music.
+
+=============================================================================
+
+*** Sound effects ***
+
+void echo_play_sfx(const void *esf)
+
+   Starts playback of the specified sound effect. The parameter 'esf' points
+   to the ESF data for the sound effect.
+
+void echo_stop_sfx()
+
+   Stops playback of sound effects.
+
+=============================================================================
+
+*** Control ***
+
+uint16_t echo_get_status()
+
+   Gets the current status of Echo. Returns an OR of the following flags,
+   as relevant:
+   
+   ECHO_STAT_BGM .... Background music is playing
+   ECHO_STAT_SFX .... Sound effect is playing
+   ECHO_STAT_BUSY ... Echo is busy (can't take commands)
+   
+   The API will automatically wait if you try to send a command while Echo is
+   busy, so the only reason to check for that is if you don't want to halt
+   the 68000 until Echo is ready to take more commands.
+
+=============================================================================
+
+*** Raw access ***
+
+void echo_send_command(uint8_t command)
+
+   Sends an argument-less command to Echo. The parameter 'command' is the
+   command to send, and may be one of the following:
+   
+   ECHO_CMD_STOPBGM ..... Stop background music playback
+   ECHO_CMD_RESUMEBGM ... Resume background music playback
+   ECHO_CMD_STOPSFX ..... Stop sound effect playback
+
+void echo_send_command_ex(uint8_t command, const void *address)
+
+   Sends a command to Echo that takes an address as its argument. The
+   parameter 'command' is the command to send, while the parameter 'address'
+   is the address to use as argument. The command may be one of these:
+   
+   ECHO_CMD_PLAYBGM .... Start background music playback
+   ECHO_CMD_PLAYSFX .... Start sound effect playback
+   ECHO_CMD_LOADLIST ... Load instrument list (warning: see below)
+   
+   Do *NOT* use ECHO_CMD_LOADLIST unless you *REALLY* know you're doing, this
+   makes Echo load the instrument list by itself and it expects a different
+   format from the one used by the C API.
+
+=============================================================================

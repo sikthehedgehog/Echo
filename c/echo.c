@@ -77,7 +77,7 @@ void echo_init(const void **list) {
 // param cmd: command to send
 //***************************************************************************
 
-void echo_send_command(unsigned char cmd) {
+void echo_send_command(uint8_t cmd) {
    // We need access to Z80 bus
    Z80_REQUEST();
    
@@ -104,7 +104,7 @@ void echo_send_command(unsigned char cmd) {
 // param addr: address parameter
 //***************************************************************************
 
-void echo_send_command_ex(unsigned char cmd, const void *addr) {
+void echo_send_command_ex(uint8_t cmd, const void *addr) {
    // Since we need to split the address into multiple bytes we put it in an
    // integer. This is a bad practice in general, period, but since we don't
    // care about portability here we can afford to do it this time.
@@ -190,7 +190,7 @@ void echo_stop_sfx(void) {
 // return: status flags (see ECHO_STAT_*)
 //***************************************************************************
 
-unsigned short echo_get_status(void) {
+uint16_t echo_get_status(void) {
    // We need access to the Z80
    Z80_REQUEST();
    

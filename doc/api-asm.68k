@@ -1,0 +1,104 @@
+=============================================================================
+
+*** How to use ***
+
+You need to take "src-68k/echo.68k" and include it in your program. Then you
+need to take "built/prog-z80.bin" (or if you built Echo from source, the
+generated binary). Finally, go to the echo.68k file, look for @Z80Program
+(should be near the end of the file) and change the filename to point where
+the prog-z80.bin file is.
+
+Echo should now be inside your program. Now call Echo_Init (see below) to
+initialize Echo and load the instrument list, and then you can proceed to use
+Echo as needed (e.g. call Echo_PlayBGM to start playing music).
+
+Unless stated otherwise, calling the API subroutines will *not* modify the
+68000 registers.
+
+=============================================================================
+
+*** Initialization ***
+
+Echo_Init
+
+   Initializes Echo. Loads the instrument list, loads the Z80 engine and gets
+   it running. You need to call this before you can use Echo (usually when
+   the program is just starting).
+   
+   The address of the instrument list is given in register a0. The instrument
+   list can be built using the Echo_List* macros. An example of a short
+   instrument list is as follows:
+   
+   Echo_ListEntry instrument1
+   Echo_ListEntry instrument2
+   Echo_ListEntry instrument3
+   Echo_ListEnd
+   
+   Where the parameter for Echo_ListEntry is the address (e.g. a label) to
+   the EIF/EEF/EWF data of the instrument.
+
+=============================================================================
+
+*** Background music ***
+
+Echo_PlayBGM
+
+   Starts playback of the specified background music. The register a0 points
+   to the ESF data for the background music.
+
+Echo_StopBGM
+
+   Stops playback of background music. Used both to stop and to pause music
+   (the latter can be undone with Echo_ResumeBGM, see below).
+
+Echo_ResumeBGM
+
+   Resumes playback of whatever background music was playing last time before
+   Echo_StopBGM was called. Used when you want to unpause music.
+
+=============================================================================
+
+*** Sound effects ***
+
+Echo_PlaySFX
+
+   Starts playback of the specified sound effect. The register a0 points to
+   the ESF data for the sound effect.
+
+Echo_StopSFX
+
+   Stops playback of sound effects.
+
+=============================================================================
+
+*** Control ***
+
+Echo_GetStatus
+
+   Gets the current status of Echo. The status is returned as a word in d0,
+   with the following bits set as relevant:
+   
+   Bit 0 .... Sound effect is playing
+   Bit 1 .... Background music is playing
+   Bit 15 ... Echo is busy (can't take commands)
+   
+   The API will automatically wait if you try to send a command while Echo is
+   busy, so the only reason to check for that is if you don't want to halt
+   the 68000 until Echo is ready to take more commands.
+
+=============================================================================
+
+*** Raw access ***
+
+Echo_SendCommand
+
+   Sends an argument-less command to Echo. The command ID is given as a byte
+   in register d0.
+
+Echo_SendCommandEx
+
+   Sends a command to Echo that takes an address as its argument. The command
+   ID is given as a byte in register d0, while the address argument is given
+   in register a0.
+
+=============================================================================
