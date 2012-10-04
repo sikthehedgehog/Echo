@@ -630,7 +630,7 @@ SetFMParamBGM:
     and $07                     ; Store parameters
     ld h, RAM_BGMFMPan>>8
     add RAM_BGMFMPan&$FF
-    ld l, h
+    ld l, a
     ld (hl), b
     
     ex af, af'
