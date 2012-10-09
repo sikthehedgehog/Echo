@@ -613,13 +613,13 @@ SetFMParamSFX:
 SetFMParamBGM:
     ld b, a
     PollPCM
-    ld a, b
     
     ld a, b                     ; Determine which port to write
     and $04
     rrca
     ld iyl, a
 
+    ld a, b
     ex af, af'
     PollPCM
     call GetParam               ; Get parameters
