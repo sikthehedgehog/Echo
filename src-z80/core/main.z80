@@ -35,9 +35,7 @@ EntryPoint:
     ld iyh, $40
 
     exx                         ; Init PCM playback status
-    ld bc, $0000                ; B = playing, C = bank
-    ld de, $0000                ; DE = address
-    ld hl, $6000                ; HL = always $6000
+    ld b, $00                   ; Not playing
     exx
 
     ld (ix+0), $2B              ; Disable DAC by default
@@ -203,7 +201,7 @@ BankSwitch: macro
     ld (hl), a
     rrca
     ld (hl), a
-    ld (hl), l
+    ld (hl), h
     rrca
     ld (hl), a
     endm
@@ -265,9 +263,10 @@ GetParam:
     jp z, .noswitchp
     ld a, c
     ld (RAM_LastBank), a
-    exx
+    push hl
+    ld hl, $6000
     BankSwitch
-    exx
+    pop hl
 .noswitchp:
     ld b, (hl)                  ; Get volume
 

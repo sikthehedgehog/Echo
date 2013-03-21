@@ -164,7 +164,7 @@ EntryPoint:
                         ; 123456789012345678901234567890123456
 
 @Str_Title1:        dc.b "Echo sound engine", 0
-@Str_Title2:        dc.b "Version 1.0 by Sik", 0
+@Str_Title2:        dc.b "Version 1.1 by Sik", 0
 @Str_Instr1:        dc.b "Use D-pad to select song", 0
 @Str_Instr2:        dc.b "A/C: play, B: stop", 0
     even

@@ -19,10 +19,9 @@ PlayPCMBGM:
 
 PlayPCM:
     call GetParam               ; Get sample ID
-
+    
     ld a, b
     exx                         ; We'll modify PCM data now
-    ld b, $01                   ; Play PCM!
 
     ld h, RAM_PointerList>>8    ; Get offset in pointer list
     ld l, a
@@ -32,10 +31,38 @@ PlayPCM:
     ld e, (hl)
     inc h
     ld c, (hl)
+    
+    ld hl, $6000                ; Initial bank switch
+    ld a, c
+    ld (RAM_LastBank), a
+    BankSwitch
+    
+    ld h, RAM_PCMBuffer>>8      ; Set buffer where the sample starts
+    ld a, e
+    or $F0
+    ld l, a
+    
+    ld b, l
+.load1st:                       ; Copy initial samples into the buffer
+    ld a, (de)
+    ld (hl), a
+    inc e
+    inc l
+    jp nz, .load1st
+    ld l, b
+    
+    ld a, e                     ; Check if the sample should skip ahead
+    or a                          ; already
+    jp nz, .noskip1st
+    inc d
+    jp nz, .noskip1st
+    ld d, $80
+    inc c
+.noskip1st:
 
-    ld hl, $6000                ; Restore $6000 back to HL
-    exx                         ; Back to standard variables
-
+    ld b, $01                   ; Play PCM!
+    exx                         ; Back to standard registers
+    
     ld (ix+0), $2B              ; Turn on DAC
     ld (ix+1), $80
     ld (ix+0), $2A
@@ -49,43 +76,27 @@ PlayPCM:
 ;****************************************************************************
 
 UpdatePCM:
-    ;ld (ix+0), $24              ; Reset timer
-    ;ld (ix+1), $FE
-    ;ld (ix+0), $25
-    ;ld (ix+1), $03
-    
-    ld (ix+0), $27
-    ld (ix+1), $1F
-
     exx                         ; Switch to PCM registers
 
     ld a, b                     ; Do any playback?
     or a
     jr z, .nopcm
+    
+.doagain:
+    ld (ix+0), $27              ; Acknowledge timer
+    ld (ix+1), $1F
 
-    ld a, (RAM_LastBank)        ; Bank switch?
-    cp c
-    jp z, .noswitchu
-    ld a, c
-    ld (RAM_LastBank), a
-    BankSwitch
-.noswitchu:
-
-    ld a, (de)                  ; Get sample
-    inc a                       ; Is it end of waveform?
-    jr z, .stop                   ; If so, stop
+    ld a, (hl)                  ; Fetch next sample
+    inc a                       ; Check if it's the end of the waveform
+    jr z, .stop
     ld (ix+0), $2A              ; Nope, send sample to YM2612
     ld (ix+1), a
-
-    inc e                       ; Get address for next sample
-    jr nz, .nopcm
-    inc d
-    jr nz, .nopcm
-    ld d, $80
-    inc c
+    
+    inc l                       ; Update buffer position
+    jr z, .reload               ; Need to buffer more?
 
 .nopcm:
-    exx                         ; Go back to normal registers
+    exx                         ; Switch to normal registers
     ret                         ; End of subroutine
 
 .stop:
@@ -94,8 +105,99 @@ UpdatePCM:
     ld (ix+1), $80
     ld (ix+0), $2B
     ld (ix+1), $00
-    exx                         ; Go back to normal registers
+    exx                         ; Switch to normal registers
     ret                         ; End of subroutine
+
+.reload:
+    ld a, (RAM_LastBank)        ; Bank switch if needed
+    cp c
+    jp z, .noswitchu
+    ld a, c
+    ld (RAM_LastBank), a
+    ld hl, $6000
+    BankSwitch
+.noswitchu:
+    
+    ld hl, RAM_PCMBuffer        ; Load samples into the buffer
+    
+    ld a, (de)                  ; Samples 1~4
+    ld (hl), a
+    inc l
+    inc e
+    ld a, (de)
+    ld (hl), a
+    inc l
+    inc e
+    ld a, (de)
+    ld (hl), a
+    inc l
+    inc e
+    ld a, (de)
+    ld (hl), a
+    inc l
+    inc e
+    
+    ld a, (de)                  ; Samples 5~8
+    ld (hl), a
+    inc l
+    inc e
+    ld a, (de)
+    ld (hl), a
+    inc l
+    inc e
+    ld a, (de)
+    ld (hl), a
+    inc l
+    inc e
+    ld a, (de)
+    ld (hl), a
+    inc l
+    inc e
+    
+    ld a, (de)                  ; Samples 9~12
+    ld (hl), a
+    inc l
+    inc e
+    ld a, (de)
+    ld (hl), a
+    inc l
+    inc e
+    ld a, (de)
+    ld (hl), a
+    inc l
+    inc e
+    ld a, (de)
+    ld (hl), a
+    inc l
+    inc e
+    
+    ld a, (de)                  ; Samples 13~16
+    ld (hl), a
+    inc l
+    inc e
+    ld a, (de)
+    ld (hl), a
+    inc l
+    inc e
+    ld a, (de)
+    ld (hl), a
+    inc l
+    inc e
+    ld a, (de)
+    ld (hl), a
+    inc l
+    inc e
+    
+    jp nz, .nobankchg           ; Update high bytes of address if needed
+    inc d
+    jp nz, .nobankchg
+    ld d, $80
+    inc c
+.nobankchg:
+    
+    ld l, RAM_PCMBuffer&$FF     ; Go back to the beginning of the buffer
+    jp .doagain                 ; We took so long we should play the next
+                                  ; sample already ._.'
 
 ;****************************************************************************
 ; StopPCM*
@@ -125,7 +227,6 @@ StopPCM:
     ld (ix+1), $00
 
     ret                         ; End of subroutine
-
 
 ;****************************************************************************
 ; LockChannelPCM [event $EC]

@@ -45,6 +45,9 @@ RAM_Scratch:        ds 32           ; Scratch bytes, may be useful when
                                       ; buffering to speed up to avoid bank
                                       ; switching conflicts
 
+    ds $F0-($&$FF), $FF
+RAM_PCMBuffer:      ds 16           ; PCM buffer
+
 ;****************************************************************************
 ; Pointer list starts being stored from here
 ; $300 (768) bytes are needed to store the pointer list
@@ -54,8 +57,6 @@ RAM_Scratch:        ds 32           ; Scratch bytes, may be useful when
 ;   RAM_PointerList[$100+n] = address low
 ;   RAM_PointerList[$200+n] = bank
 ;****************************************************************************
-
-    ds $100-($&$FF), $FF
 
 RAM_PointerList: equ $1C00
 
