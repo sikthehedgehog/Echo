@@ -88,6 +88,31 @@ Echo_GetStatus
 
 =============================================================================
 
+*** Settings ***
+
+Echo_SetPCMRate
+
+   Changes the sample rate of PCM. Note this is a global parameter as it
+   affects both BGM and SFX. The value is what one would write in timer A of
+   the YM2612 register. Here are the approximate frequencies for some values
+   (default is $05):
+   
+              NTSC         PAL |           NTSC        PAL
+   ----------------------------|--------------------------
+   $02 ... 26632Hz ... 26389Hz | $08 ... 6658Hz ... 6597Hz
+   $03 ... 17755Hz ... 17593Hz | $09 ... 5918Hz ... 5864Hz
+   $04 ... 13316Hz ... 13194Hz | $0A ... 5326Hz ... 5278Hz
+   $05 ... 10653Hz ... 10556Hz | $0B ... 4842Hz ... 4798Hz
+   $06 .... 8877Hz .... 8796Hz | $0C ... 4439Hz ... 4398Hz
+   $07 .... 7609Hz .... 7539Hz | $0D ... 4097Hz ... 4060Hz
+   
+   The higher the sample rate, the better quality, but also takes up more
+   space and, more importantly, reduces CPU time available for other things
+   (which can hamper Echo's ability to process complex streams). Be careful
+   if you increase the sample rate.
+
+=============================================================================
+
 *** Raw access ***
 
 Echo_SendCommand
@@ -95,10 +120,16 @@ Echo_SendCommand
    Sends an argument-less command to Echo. The command ID is given as a byte
    in register d0.
 
-Echo_SendCommandEx
+Echo_SendCommandAddr
 
    Sends a command to Echo that takes an address as its argument. The command
    ID is given as a byte in register d0, while the address argument is given
    in register a0.
+
+Echo_SendCommandByte
+
+   Sends a command to Echo that takes a byte as its argument. The command ID
+   is given as a byte in register d0, while the byte argument is given in
+   register d1.
 
 =============================================================================

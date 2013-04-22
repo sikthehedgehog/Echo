@@ -61,13 +61,14 @@ Echo_SendCommand:
     rts                             ; End of subroutine
 
 ;****************************************************************************
-; Echo_SendCommandEx
+; Echo_SendCommandAddr
 ; Sends an Echo command (with address parameter)
 ;
 ; input d0.b ... Echo command
 ; input a0.l ... Address parameter
 ;****************************************************************************
 
+Echo_SendCommandAddr:
 Echo_SendCommandEx:
     movem.l d0-d1, -(sp)            ; Save register
 
@@ -106,6 +107,35 @@ Echo_SendCommandEx:
     rts                             ; End of subroutine
 
 ;****************************************************************************
+; Echo_SendCommandByte
+; Sends an Echo command (with a byte parameter)
+;
+; input d0.b ... Echo command
+; input d1.b ... Byte parameter
+;****************************************************************************
+
+Echo_SendCommandByte:
+    Echo_Z80Request                 ; We need the Z80 bus
+
+    move.w  d1, -(sp)               ; Save register
+@Try:
+    tst.b   ($A01FFF)               ; Check if Echo is ready
+    beq.s   @Ready                  ; Too busy?
+    Echo_Z80Release                   ; Let Echo continue
+    move.w  #$FF, d1                  ; Give it some time
+    dbf     d1, *                       ; ...
+    Echo_Z80Request                   ; Get Z80 bus back
+    bra.s   @Try                      ; Try again
+
+@Ready:
+    move.w  (sp)+, d1               ; Restore register
+    move.b  d0, ($A01FFF)           ; Write command ID
+    move.b  d1, ($A01FFC)           ; Write parameter
+    Echo_Z80Release                 ; We're done with the Z80 bus
+
+    rts                             ; End of subroutine
+
+;****************************************************************************
 ; Echo_PlaySFX
 ; Plays a SFX
 ;
@@ -115,7 +145,7 @@ Echo_SendCommandEx:
 Echo_PlaySFX:
     move.w  d0, -(sp)               ; Save register
     move.b  #$02, d0                ; Command $02 = play SFX
-    bsr     Echo_SendCommandEx      ; Send command to Echo
+    bsr     Echo_SendCommandAddr    ; Send command to Echo
     move.w  (sp)+, d0               ; Restore register
     rts                             ; End of subroutine
 
@@ -141,7 +171,7 @@ Echo_StopSFX:
 Echo_PlayBGM:
     move.w  d0, -(sp)               ; Save register
     move.b  #$04, d0                ; Command $04 = play BGM
-    bsr     Echo_SendCommandEx      ; Send command to Echo
+    bsr     Echo_SendCommandAddr    ; Send command to Echo
     move.w  (sp)+, d0               ; Restore register
     rts                             ; End of subroutine
 
@@ -167,6 +197,21 @@ Echo_ResumeBGM:
     move.b  #$06, d0                ; Command $06 = resume BGM
     bsr     Echo_SendCommand        ; Send command to Echo
     move.w  (sp)+, d0               ; Restore register
+    rts                             ; End of subroutine
+
+;****************************************************************************
+; Echo_SetPCMRate
+; Sets the playback rate of PCM
+;
+; input d0.b ... New rate (timer A value)
+;****************************************************************************
+
+Echo_SetPCMRate:
+    movem.l d0-d1, -(sp)            ; Save registers
+    move.b  d0, d1                  ; Put parameter in place
+    move.b  #$07, d0                ; Command $07 = set PCM rate
+    bsr     Echo_SendCommandByte    ; Send command to Echo
+    movem.l (sp)+, d0-d1            ; Restore registers
     rts                             ; End of subroutine
 
 ;****************************************************************************
@@ -258,6 +303,6 @@ Echo_Init:
 ; It should be located wherever Echo_ProgFile was defined
 ;****************************************************************************
 
-@Z80Program: incbin "..."
+@Z80Program: incbin "../bin/prog-z80.bin"
 @Z80ProgSize equ *-@Z80Program
     even

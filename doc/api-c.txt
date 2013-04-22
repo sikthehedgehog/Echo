@@ -92,6 +92,31 @@ uint16_t echo_get_status()
 
 =============================================================================
 
+*** Settings ***
+
+void echo_set_pcm_rate(uint8_t rate)
+
+   Changes the sample rate of PCM. Note this is a global parameter as it
+   affects both BGM and SFX. The value is what one would write in timer A of
+   the YM2612 register. Here are the approximate frequencies for some values
+   (default is 0x05):
+   
+               NTSC         PAL |            NTSC        PAL
+   -----------------------------|---------------------------
+   0x02 ... 26632Hz ... 26389Hz | 0x08 ... 6658Hz ... 6597Hz
+   0x03 ... 17755Hz ... 17593Hz | 0x09 ... 5918Hz ... 5864Hz
+   0x04 ... 13316Hz ... 13194Hz | 0x0A ... 5326Hz ... 5278Hz
+   0x05 ... 10653Hz ... 10556Hz | 0x0B ... 4842Hz ... 4798Hz
+   0x06 .... 8877Hz .... 8796Hz | 0x0C ... 4439Hz ... 4398Hz
+   0x07 .... 7609Hz .... 7539Hz | 0x0D ... 4097Hz ... 4060Hz
+   
+   The higher the sample rate, the better quality, but also takes up more
+   space and, more importantly, reduces CPU time available for other things
+   (which can hamper Echo's ability to process complex streams). Be careful
+   if you increase the sample rate.
+
+=============================================================================
+
 *** Raw access ***
 
 void echo_send_command(uint8_t command)
@@ -103,7 +128,7 @@ void echo_send_command(uint8_t command)
    ECHO_CMD_RESUMEBGM ... Resume background music playback
    ECHO_CMD_STOPSFX ..... Stop sound effect playback
 
-void echo_send_command_ex(uint8_t command, const void *address)
+void echo_send_command_addr(uint8_t command, const void *address)
 
    Sends a command to Echo that takes an address as its argument. The
    parameter 'command' is the command to send, while the parameter 'address'
@@ -116,5 +141,13 @@ void echo_send_command_ex(uint8_t command, const void *address)
    Do *NOT* use ECHO_CMD_LOADLIST unless you *REALLY* know you're doing, this
    makes Echo load the instrument list by itself and it expects a different
    format from the one used by the C API.
+
+void echo_send_command_byte(uint8_t command, uint8_t byte)
+
+   Sends a command to Echo that takes a byte as its argument. The parameter
+   'command' is the command to send, while the parameter 'byte' is the byte
+   to use as argument. The command may be... just this for now:
+   
+   ECHO_CMD_SETPCMRATE ... Change PCM sample rate
 
 =============================================================================

@@ -101,6 +101,8 @@ PollPCM: macro
 ;****************************************************************************
 ; RunCommand
 ; Checks which command to run
+;----------------------------------------------------------------------------
+; To-do: replace with pointer list?
 ;****************************************************************************
 
 RunCommand:
@@ -116,6 +118,8 @@ RunCommand:
     jp z, StopBGMCmd
     dec a                       ; Command $06: resume BGM
     jp z, ResumeBGM
+    dec a                       ; Command $07: set PCM rate
+    jp z, SetPCMRate
 
     PollPCM
 

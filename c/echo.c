@@ -97,14 +97,14 @@ void echo_send_command(uint8_t cmd) {
 }
 
 //***************************************************************************
-// echo_send_command_ex
+// echo_send_command_addr
 // Sends a raw command to Echo. An address parameter is taken.
 //---------------------------------------------------------------------------
 // param cmd: command to send
 // param addr: address parameter
 //***************************************************************************
 
-void echo_send_command_ex(uint8_t cmd, const void *addr) {
+void echo_send_command_addr(uint8_t cmd, const void *addr) {
    // Since we need to split the address into multiple bytes we put it in an
    // integer. This is a bad practice in general, period, but since we don't
    // care about portability here we can afford to do it this time.
@@ -135,6 +135,34 @@ void echo_send_command_ex(uint8_t cmd, const void *addr) {
 }
 
 //***************************************************************************
+// echo_send_command_byte
+// Sends a raw command to Echo. A byte parameter is taken.
+//---------------------------------------------------------------------------
+// param cmd: command to send
+// param byte: parameter
+//***************************************************************************
+
+void echo_send_command_byte(uint8_t cmd, uint8_t byte) {
+   // We need access to Z80 bus
+   Z80_REQUEST();
+   
+   // Is Echo busy yet?
+   while (z80_ram[0x1FFF] != 0x00) {
+      Z80_RELEASE();
+      int16_t i;
+      for (i = 0x3FF; i >= 0; i--);
+      Z80_REQUEST();
+   }
+   
+   // Write the command
+   z80_ram[0x1FFF] = cmd;
+   z80_ram[0x1FFC] = byte;
+
+   // Done with the Z80
+   Z80_RELEASE();
+}
+
+//***************************************************************************
 // echo_play_bgm
 // Starts playing background music.
 //---------------------------------------------------------------------------
@@ -142,7 +170,7 @@ void echo_send_command_ex(uint8_t cmd, const void *addr) {
 //***************************************************************************
 
 void echo_play_bgm(const void *ptr) {
-   echo_send_command_ex(ECHO_CMD_PLAYBGM, ptr);
+   echo_send_command_addr(ECHO_CMD_PLAYBGM, ptr);
 }
 
 //***************************************************************************
@@ -171,7 +199,7 @@ void echo_resume_bgm(void) {
 //***************************************************************************
 
 void echo_play_sfx(const void *ptr) {
-   echo_send_command_ex(ECHO_CMD_PLAYSFX, ptr);
+   echo_send_command_addr(ECHO_CMD_PLAYSFX, ptr);
 }
 
 //***************************************************************************
@@ -181,6 +209,17 @@ void echo_play_sfx(const void *ptr) {
 
 void echo_stop_sfx(void) {
    echo_send_command(ECHO_CMD_STOPSFX);
+}
+
+//***************************************************************************
+// echo_set_pcm_rate
+// Changes the playback rate of PCM.
+//---------------------------------------------------------------------------
+// param rate: new rate (timer A value)
+//***************************************************************************
+
+void echo_set_pcm_rate(uint8_t rate) {
+   echo_send_command_byte(ECHO_CMD_SETPCMRATE, rate);
 }
 
 //***************************************************************************
