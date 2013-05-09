@@ -23,5 +23,6 @@ FORMAT
     
     Some bits are unused and ignored by the YM2612. In an EIF instrument,
     they *must* be 0, since Echo will rely on this for optimization purposes.
+    (note: this refers to bits unused by the YM2612 itself, *not* Echo)
 
 =============================================================================
