@@ -99,7 +99,7 @@ void echo_set_pcm_rate(uint8_t rate)
    Changes the sample rate of PCM. Note this is a global parameter as it
    affects both BGM and SFX. The value is what one would write in timer A of
    the YM2612 register. Here are the approximate frequencies for some values
-   (default is 0x05):
+   (default is 0x04):
    
                NTSC         PAL |            NTSC        PAL
    -----------------------------|---------------------------

@@ -95,7 +95,7 @@ Echo_SetPCMRate
    Changes the sample rate of PCM. Note this is a global parameter as it
    affects both BGM and SFX. The value is what one would write in timer A of
    the YM2612 register. Here are the approximate frequencies for some values
-   (default is $05):
+   (default is $04):
    
               NTSC         PAL |           NTSC        PAL
    ----------------------------|--------------------------
