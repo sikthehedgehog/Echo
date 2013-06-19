@@ -60,8 +60,10 @@ PlayPCM:
     inc c
 .noskip1st:
 
-    ld b, $01                   ; Play PCM!
+    ;ld b, $01                   ; Play PCM!
     exx                         ; Back to standard registers
+    xor a                       ; Enable PCM playback
+    ld (UpdatePCM), a
     
     ld (ix+0), $2B              ; Turn on DAC
     ld (ix+1), $80
@@ -76,12 +78,11 @@ PlayPCM:
 ;****************************************************************************
 
 UpdatePCM:
+    ret                         ; RET = no PCM playback
+                                ; NOP = PCM playback
+    
     exx                         ; Switch to PCM registers
 
-    ld a, b                     ; Do any playback?
-    or a
-    jr z, .nopcm
-    
 .doagain:
     ld (ix+0), $27              ; Acknowledge timer
     ld (ix+1), $1F
@@ -219,9 +220,8 @@ StopPCMBGM:
     jp ProcessBGMRun            ; End of subroutine
 
 StopPCM:
-    exx                         ; Stop PCM playback
-    ld b, $00
-    exx
+    ld a, $C9                   ; Stop PCM playback
+    ld (UpdatePCM), a
 
     ld (ix+0), $2B              ; Disable DAC
     ld (ix+1), $00
