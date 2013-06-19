@@ -99,12 +99,12 @@ Echo_SetPCMRate
    
               NTSC         PAL |           NTSC        PAL
    ----------------------------|--------------------------
-   $02 ... 26632Hz ... 26389Hz | $08 ... 6658Hz ... 6597Hz
-   $03 ... 17755Hz ... 17593Hz | $09 ... 5918Hz ... 5864Hz
-   $04 ... 13316Hz ... 13194Hz | $0A ... 5326Hz ... 5278Hz
-   $05 ... 10653Hz ... 10556Hz | $0B ... 4842Hz ... 4798Hz
-   $06 .... 8877Hz .... 8796Hz | $0C ... 4439Hz ... 4398Hz
-   $07 .... 7609Hz .... 7539Hz | $0D ... 4097Hz ... 4060Hz
+   $01 ... 26632Hz ... 26389Hz | $07 ... 6658Hz ... 6597Hz
+   $02 ... 17755Hz ... 17593Hz | $08 ... 5918Hz ... 5864Hz
+   $03 ... 13316Hz ... 13194Hz | $09 ... 5326Hz ... 5278Hz
+   $04 ... 10653Hz ... 10556Hz | $0A ... 4842Hz ... 4798Hz
+   $05 .... 8877Hz .... 8796Hz | $0B ... 4439Hz ... 4398Hz
+   $06 .... 7609Hz .... 7539Hz | $0C ... 4097Hz ... 4060Hz
    
    The higher the sample rate, the better quality, but also takes up more
    space and, more importantly, reduces CPU time available for other things
