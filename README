@@ -53,10 +53,9 @@ documentation for the C API is in "doc/c-api.txt".
    * Assemble src-z80/build.z80 to bin/prog-z80.bin
    * Assemble tester/build.68k to bin/prog-68k.bin (optional)
 
-Sorry for not providing a build script but my current setup is a mess and
-needs to be changed x_x; Currently using z80asm to build the Z80 code and
-asm68k to build the 68000 code, I need to find good replacements for both
-(z80-asm for being crappy, asm68k for not being free).
+If you're using Linux, you can use build.sh to build the Echo binary (you'll
+need z80asm for this). I still need to provide scripts for the tester ROM
+though, sorry :/ (I used asm68k, if you wonder)
 
 Also no source for the data blobs yet, for similar reasons, although I have
 more control over those tools at least so I may come up with some good
