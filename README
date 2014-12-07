@@ -7,12 +7,12 @@
        |   |         |_   |_     ___  |   |     |   | |   |     |   |
        |   |_______    |_   |___|  _| |   |     |   | |_  |_____|  _|
        |___________|     |________|   |___|     |___|   |_________|
-    ___ ___ _ _ ___ __    ___ ___ ___ _ ___ ___                   _   ___
-   |  _|   | | |   |  \  |  _|   |  _| |   |  _|                 | | |_  |
-   | |_| | | | | | | | | | |_| | | |_| | | | |_   _ _ ___ ___    | |  _| |
-   |_  | | | | | | | | | |  _| | | | | | | |  _| | | | __| _ \   | | |  _|
-    _| | | | | | | | | | | |_| | | | | | | | |_  | | | __|   /_  | |_| |_
-   |___|___|___|_|_|__/  |___|_|_|___|_|_|_|___|  \_/|___|_|_\_| |_|_|___|
+   ___ ___ _ _ ___ __    ___ ___ ___ _ ___ ___                   _   ___ _
+  |  _|   | | |   |  \  |  _|   |  _| |   |  _|                 | | |_  | |
+  | |_| | | | | | | | | | |_| | | |_| | | | |_   _ _ ___ ___    | |  _| | |
+  |_  | | | | | | | | | |  _| | | | | | | |  _| | | | __| _ \   | | |  _| |
+   _| | | | | | | | | | | |_| | | | | | | | |_  | | | __|   /_  | |_| |_| |
+  |___|___|___|_|_|__/  |___|_|_|___|_|_|_|___|  \_/|___|_|_\_| |_|_|___|_|
 
 =============================================================================
 
@@ -54,7 +54,7 @@ documentation for the C API is in "doc/c-api.txt".
    * Assemble tester/build.68k to bin/prog-68k.bin (optional)
 
 Sorry for not providing a build script but my current setup is a mess and
-needs to be changed x_x; Currently using z80-asm to build the Z80 code and
+needs to be changed x_x; Currently using z80asm to build the Z80 code and
 asm68k to build the 68000 code, I need to find good replacements for both
 (z80-asm for being crappy, asm68k for not being free).
 
