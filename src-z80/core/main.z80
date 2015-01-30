@@ -231,11 +231,9 @@ LoadList:
 
 .loop:
     call GetParam               ; Get high byte address
-    
     ld a, b                     ; Is it the end of the list?
     or a
     jp z, .end
-    
     ld (de), a                  ; Store high byte address
     inc d
     

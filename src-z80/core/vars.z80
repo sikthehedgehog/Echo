@@ -15,7 +15,7 @@ RAM_PSGData:        ds 4*16         ; PSG envelope data
 
 RAM_BGMFMInstr:     ds 8            ; FM instruments used by BGM
 RAM_BGMFMVol:       ds 8            ; FM volumes used by BGM
-RAM_BGMFMPan:       ds 8            ; FM panning used by BGM
+RAM_BGMFMPan:       ds 8, $C0       ; FM panning used by BGM
 
 RAM_FMData:         ds 8*5          ; FM info (for volume handling)
                                       ; ds 8*1 ... Register $B0
