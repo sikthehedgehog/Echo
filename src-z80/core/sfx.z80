@@ -133,6 +133,9 @@ ProcessSFXRun:
     PollPCM
     ld a, b
 
+    cp $E0                      ; Events $D0-$DF: short set delay
+    jp c, SetDelaySFXShort
+
     cp $E8
     jp c, LockChannelFM         ; Events $E0-$E7: lock FM channel
     cp $EC

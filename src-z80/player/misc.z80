@@ -1,5 +1,5 @@
 ;****************************************************************************
-; SetDelay* [event $FE]
+; SetDelay* [event $FE, events $D0-$DF]
 ; Adds a delay in playback
 ;****************************************************************************
 
@@ -11,11 +11,26 @@ SetDelayBGM:
     call SetDelay               ; We're just a wrapper
     jp DoTick_BGMSkip           ; End of subroutine
 
+SetDelaySFXShort:
+    and $0F
+    inc a
+    ld b, a
+    call SetDelayShort          ; We're just a wrapper
+    jp DoTick_SFXSkip           ; End of subroutine
+
+SetDelayBGMShort:
+    and $0F
+    inc a
+    ld b, a
+    call SetDelayShort          ; We're just a wrapper
+    jp DoTick_BGMSkip           ; End of subroutine
+
 SetDelay:
     PollPCM
     call GetParam               ; Get delay
     PollPCM
 
+SetDelayShort:
     ex de, hl
     ld (hl), d                  ; Store new address
     dec l

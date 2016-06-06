@@ -187,6 +187,9 @@ ProcessBGMSkip:
     PollPCM
     ld a, b
 
+    cp $E0                      ; Events $D0-$DF: short set delay
+    jp c, SetDelayBGMShort
+
     cp $F8                      ; Events $F0-$F7: set FM parameters
     jp c, SetFMParamBGM
 
