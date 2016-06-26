@@ -300,7 +300,6 @@ Echo_Init:
 
 ;****************************************************************************
 ; Echo Z80 program
-; It should be located wherever Echo_ProgFile was defined
 ;****************************************************************************
 
 @Z80Program: incbin "../bin/prog-z80.bin"
