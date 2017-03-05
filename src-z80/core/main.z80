@@ -90,6 +90,8 @@ EntryPoint:
 ;****************************************************************************
 ; PollPCM
 ; Used to update PCM while not idle
+;----------------------------------------------------------------------------
+; breaks: af
 ;****************************************************************************
 
 PollPCM: macro
@@ -154,21 +156,31 @@ IdleLoop:
 ;****************************************************************************
 
 DoTick:
-    ld a, (ix+0)
-    bit 0, a
-    call nz, UpdatePCM
+;    ld a, (ix+0)
+;    bit 0, a
+;    call nz, UpdatePCM
 
-    ld (ix+0), $27
+    PollPCM
+
+    ld (ix+0), $27              ; Retrigger the timer
     ld (ix+1), $2F
 
     PollPCM
+    
+    ld a, ($1FF1)               ; Refresh volume if needed
+    or a
+    call nz, RefreshVolume
 
 DoTick_SFX:                     ; Process SFXs
     jp DoTick_SFXSkip
 DoTick_SFXSkip:
 
     PollPCM
+    
+    call ProcessDirect            ; Process direct events
 
+    PollPCM
+    
 DoTick_BGM:                     ; Process BGMs
     jp DoTick_BGMSkip
 DoTick_BGMSkip:
@@ -257,6 +269,19 @@ LoadList:
 ;****************************************************************************
 ; GetParam
 ; Subroutine for getting the parameter byte
+;----------------------------------------------------------------------------
+; input c .... current bank
+; input hl ... current address
+;----------------------------------------------------------------------------
+; output b .... value
+; output c .... new bank
+; output hl ... new address
+;----------------------------------------------------------------------------
+; breaks: af
+;----------------------------------------------------------------------------
+; note: the C value gets incremented *only* when HL hits $0000 (this is
+; relevant if you consider using it to fetch from Z80 RAM, which should
+; never result in HL becoming $0000).
 ;****************************************************************************
 
 GetParam:
@@ -270,7 +295,7 @@ GetParam:
     BankSwitch
     pop hl
 .noswitchp:
-    ld b, (hl)                  ; Get volume
+    ld b, (hl)                  ; Get value
 
     inc l                       ; Get next address
     jp nz, .nonewbankp

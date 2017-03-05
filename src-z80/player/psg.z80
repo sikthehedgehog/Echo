@@ -46,7 +46,7 @@ UpdatePSG:
     cp $FF                      ; Loop envelope?
     jp z, .envloop
 
-    ld iyl, b                  ; Keep byte safe somewhere...
+    ld iyl, b                   ; Keep byte safe somewhere...
     PollPCM
 
     ex de, hl                   ; Store new address
@@ -61,6 +61,7 @@ UpdatePSG:
     PollPCM
 
     db $FD,$7D ; ld a, iyl      ; Mix envelope with volume
+    and $0F
     add b
     ld b, a
 

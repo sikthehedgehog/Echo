@@ -1,6 +1,12 @@
 ;****************************************************************************
-; NoteOnFM
+; NoteOnFM* [events $00~$07]
 ; Does a "note on" for a FM channel
+;----------------------------------------------------------------------------
+; input a .... FM channel (bottom 3 bits)
+; input c .... current bank
+; input hl ... current address
+;----------------------------------------------------------------------------
+; breaks: af, b
 ;****************************************************************************
 
 NoteOnFMSFX:
@@ -95,8 +101,14 @@ NoteOnFM:
     ret                         ; End of subroutine
 
 ;****************************************************************************
-; NoteOffFM
+; NoteOffFM [events $10~$17]
 ; Does a "note off" for a FM channel
+;----------------------------------------------------------------------------
+; input a .... FM channel (bottom 3 bits)
+; input c .... current bank
+; input hl ... current address
+;----------------------------------------------------------------------------
+; breaks: af, b
 ;****************************************************************************
 
 NoteOffFMSFX:
@@ -129,8 +141,14 @@ NoteOffFM:
     ret                         ; End of subroutine
 
 ;****************************************************************************
-; SetFMNote*
+; SetFMNote* [events $30~$37]
 ; Sets the note of a FM channel without "note on"
+;----------------------------------------------------------------------------
+; input a .... FM channel (bottom 3 bits)
+; input c .... current bank
+; input hl ... current address
+;----------------------------------------------------------------------------
+; breaks: af, b
 ;****************************************************************************
 
 SetNoteFMSFX:
@@ -200,8 +218,14 @@ SetNoteFM:
     ret                         ; End of subroutine
 
 ;****************************************************************************
-; LoadFM*
+; LoadFM* [events $40~$47]
 ; Loads a FM instrument
+;----------------------------------------------------------------------------
+; input a .... FM channel (bottom 3 bits)
+; input c .... current bank
+; input hl ... current address
+;----------------------------------------------------------------------------
+; breaks: af, b
 ;****************************************************************************
 
 LoadFMSFX:
@@ -398,7 +422,9 @@ LoadFMDirect:
     pop hl
     pop de
     pop bc
-    ret
+    
+    ld b, 0
+    jp SetFMVolLoad
 
 ;****************************************************************************
 ; SetFMVol*
@@ -475,12 +501,30 @@ SetFMVolLoad:
     
     and $07                     ; Get channel ID
     
+    push af                     ; Store new FM volume
+    ld h, RAM_FMVol>>8
+    add RAM_FMVol&$FF
+    ld l, a
+    ld (hl), b
+    pop af
+    
     push af
     ld h, RAM_FMData>>8         ; Get address of FM data
     add RAM_FMData&$FF
     ld l, a
     
     ex af, af'
+    PollPCM
+    ex af, af'
+    
+    and $07                     ; Get global volume
+    or $E0
+    ld d, $1F
+    ld e, a
+    ex af, af'
+    ld a, (de)
+    ld d, a
+    
     PollPCM
     ex af, af'
 
@@ -508,11 +552,13 @@ SetFMVolLoad:
     jr c, .noop1
     ld (iy+0), c
     ld a, (hl)
+    add d
+    jp m, .tooquiet1
     add b
-    cp $7F
-    jr c, .notooloud1
+    jp p, .notooquiet1
+.tooquiet1:
     ld a, $7F
-.notooloud1:
+.notooquiet1:
     ld (iy+1), a
 .noop1:
     ld a, c
@@ -529,11 +575,13 @@ SetFMVolLoad:
     jr c, .noop2
     ld (iy+0), c
     ld a, (hl)
+    add d
+    jp m, .tooquiet2
     add b
-    cp $7F
-    jr c, .notooloud2
+    jp p, .notooquiet2
+.tooquiet2:
     ld a, $7F
-.notooloud2:
+.notooquiet2:
     ld (iy+1), a
 .noop2:
     ld a, c
@@ -550,11 +598,13 @@ SetFMVolLoad:
     jr c, .noop3
     ld (iy+0), c
     ld a, (hl)
+    add d
+    jp m, .tooquiet3
     add b
-    cp $7F
-    jr c, .notooloud3
+    jp p, .notooquiet3
+.tooquiet3:
     ld a, $7F
-.notooloud3:
+.notooquiet3:
     ld (iy+1), a
 .noop3:
     ld a, c
@@ -568,11 +618,13 @@ SetFMVolLoad:
     ld l, a
     ld (iy+0), c
     ld a, (hl)                  ; Process operator #4
+    add d
+    jp m, .tooquiet4
     add b
-    cp $7F
-    jr c, .notooloud4
+    jp p, .notooquiet4
+.tooquiet4:
     ld a, $7F
-.notooloud4:
+.notooquiet4:
     ld (iy+1), a
 
     PollPCM
@@ -583,8 +635,17 @@ SetFMVolLoad:
     ret                         ; End of subroutine
 
 ;****************************************************************************
-; SetFMParam*
+; SetFMParam* [events $F0-$F7]
 ; Sets the different parameters of a FM channel
+;----------------------------------------------------------------------------
+; input c .... current bank
+; input hl ... current address
+;----------------------------------------------------------------------------
+; output b .... value
+; output c .... new bank
+; output hl ... new address
+;----------------------------------------------------------------------------
+; breaks: af, b
 ;****************************************************************************
 
 SetFMParamSFX:
@@ -657,8 +718,62 @@ SetFMParamBGM:
     jp ProcessBGMRun            ; End of subroutine
 
 ;****************************************************************************
+; SetFMReg* [events $F8-$F9]
+; Changes a FM register
+;----------------------------------------------------------------------------
+; input a .... YM2612 register bank (0 or 1, in bit 0)
+; input c .... current bank
+; input hl ... current address
+;----------------------------------------------------------------------------
+; output b .... value
+; output c .... new bank
+; output hl ... new address
+;----------------------------------------------------------------------------
+; breaks: af, b
+;****************************************************************************
+
+SetFMRegSFX:
+    call SetFMReg               ; We're just a wrapper
+    jp ProcessSFXRun
+
+SetFMRegBGM:
+    call SetFMReg               ; We're just a wrapper
+    jp ProcessBGMRun
+
+;----------------------------------------------------------------------------
+
+SetFMReg:
+    and $01                     ; Get port address
+    add a
+    ld iyl, a
+    
+    PollPCM                     ; Get parameters
+    call GetParam
+    push bc
+    PollPCM
+    call GetParam
+    PollPCM
+    ld a, b
+    pop bc
+    
+    ld (iy+0), b                ; Write register
+    ld (iy+1), a
+    
+    ret                         ; End of subroutine
+
+;****************************************************************************
 ; LockChannelFM [events $E0-$E7]
 ; Locks a FM channel
+;----------------------------------------------------------------------------
+; input a ... FM channel (0..7, in bottom 3 bits)
+; input c .... current bank
+; input hl ... current address
+;----------------------------------------------------------------------------
+; output b .... value
+; output c .... new bank
+; output hl ... new address
+;----------------------------------------------------------------------------
+; breaks: af, iy
 ;****************************************************************************
 
 LockChannelFM:
@@ -694,6 +809,10 @@ LockChannelFM:
 ;****************************************************************************
 ; KillFM
 ; Kills a FM channel
+;----------------------------------------------------------------------------
+; input a ... FM channel (0..7, in bottom 3 bits)
+;----------------------------------------------------------------------------
+; breaks: af, c, iy
 ;****************************************************************************
 
 KillFM:
@@ -720,20 +839,26 @@ KillFM:
     ld e, (hl)
     
     ld (iy+0), a
-    add 4
     ld (iy+1), e
-    nop
+    add 4
+    ex af, af'
+    PollPCM
+    ex af, af'
     ld (iy+0), a
-    add 4
     ld (iy+1), e
-    nop
+    add 4
+    ex af, af'
+    PollPCM
+    ex af, af'
     ld (iy+0), a
-    add 4
     ld (iy+1), e
-    nop
+    add 4
+    ex af, af'
+    PollPCM
+    ex af, af'
     ld (iy+0), a
-    add 4
     ld (iy+1), e
+    add 4
     
     inc l
     dec c
@@ -743,7 +868,7 @@ KillFM:
     pop de
     PollPCM
     pop af
-
+    
     ld c, a                     ; Cause the ADSR to reset
     or $F0
     ld (ix+0), $28
@@ -752,7 +877,7 @@ KillFM:
     ld (ix+1), a
     ld (ix+0), $28
     ld (ix+1), c
-
+    
     PollPCM
     ret                         ; End of subroutine
 

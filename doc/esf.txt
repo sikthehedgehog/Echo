@@ -85,6 +85,8 @@ EVENT LIST
     $4Ann ..... Set instrument PSG channel #3
     $4Bnn ..... Set instrument PSG channel #4
     
+    $Dn ....... Delay ticks (short)
+    
     $E0 ....... [SFX] Lock FM channel #1
     $E1 ....... [SFX] Lock FM channel #2
     $E2 ....... [SFX] Lock FM channel #3
@@ -103,9 +105,12 @@ EVENT LIST
     $F5nn ..... Set parameters FM channel #5
     $F6nn ..... Set parameters FM channel #6
     
+    $F8rrnn ... Set FM register in bank 0
+    $F9rrnn ... Set FM register in bank 1
+    
     $FC ....... [BGM] Go to loop
     $FD ....... [BGM] Set loop point
-    $FEnn ..... Delay ticks
+    $FEnn ..... Delay ticks (long)
     $FF ....... Stop playback
 
 =============================================================================
@@ -288,6 +293,14 @@ $4Bnn: Set instrument PSG channel #4
 
 =============================================================================
 
+$D0~$DF: Delay ticks (short)
+
+    Same as $FE01 to $FE10 ($D0 = $FE01, $D1 = $FE02, etc.). Just a shorter
+    variant of the event to reduce space usage for shorter delays (which are
+    the most common).
+
+=============================================================================
+
 $E0: Lock FM channel #1 [SFX ONLY]
 $E1: Lock FM channel #2 [SFX ONLY]
 $E2: Lock FM channel #3 [SFX ONLY]
@@ -323,6 +336,34 @@ $F6: Set parameters FM channel #6
         Bit 7 ..... 1 to enable left speaker, 0 to mute it
         Bit 6 ..... 1 to enable right speaker, 0 to mute it
         Bit 5-0 ... Must be 0
+
+=============================================================================
+
+$F8rrnn: Set FM register in bank 0
+$F9rrnn: Set FM register in bank 1
+
+    These events are used to change the value of a YM2612 register directly.
+    The rr byte indicates the register, the nn byte is the value to be
+    written into it ($F8 writes to $4000/1, $F9 writes to $4002/3).
+    
+    HERE BE DRAGONS, USE AT YOUR OWN RISK. The channel locking mechanism will
+    *not* take care of this event, and if a SFX locks the channel then the
+    register will *not* be restored properly once the SFX is over.
+    
+    More specifically:
+    
+        * If you use it on a BGM, don't let it touch any channels that may
+          get locked by SFXs.
+        
+        * If you use it on a SFX for an effect on the SFX itself, use it only
+          for channels locked by that SFX.
+        
+        * If you use it on a SFX to affect the music, use it only on channels
+          that are *not* locked by any SFX (same as first rule, actually).
+        
+        * It's possible to touch the global registers ($22~$2B in bank 0).
+          Do it at your own risk. You may mess up with Echo's functionality,
+          so be careful about it and make sure you know what you're doing.
 
 =============================================================================
 

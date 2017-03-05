@@ -17,6 +17,7 @@ RAM_BGMFMInstr:     ds 8            ; FM instruments used by BGM
 RAM_BGMFMVol:       ds 8            ; FM volumes used by BGM
 RAM_BGMFMPan:       ds 8, $C0       ; FM panning used by BGM
 
+RAM_FMVol:          ds 8            ; FM volume of each channel
 RAM_FMData:         ds 8*5          ; FM info (for volume handling)
                                       ; ds 8*1 ... Register $B0
                                       ; ds 8*1 ... Register $40
@@ -25,6 +26,7 @@ RAM_FMData:         ds 8*5          ; FM info (for volume handling)
                                       ; ds 8*1 ... Register $4C
 
 RAM_Locked:         ds 12           ; Locked channels
+RAM_PSGNote:        ds 4            ; Current PSG notes
 
 RAM_LastBank:       ds 1            ; Last accessed bank
 
@@ -64,9 +66,11 @@ RAM_PointerList: equ $1C00
 ; 68000 communication variables
 ;****************************************************************************
 
-RAM_Stack:          equ $1FF0       ; Where stack starts
+RAM_Stack:          equ $1FE0       ; Where stack starts
 
+RAM_GlobalVol:      equ $1FE0       ; Global volume for all channels
 RAM_Status:         equ $1FF0       ; Current playback status
+RAM_RefreshVol:     equ $1FF1       ; Set to refresh all volumes
 RAM_Command:        equ $1FFF       ; Command type
 RAM_ComAddr:        equ $1FFD       ; Command address parameter
 RAM_ComBank:        equ $1FFC       ; Command bank parameter

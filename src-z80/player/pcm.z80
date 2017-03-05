@@ -1,6 +1,11 @@
 ;****************************************************************************
-; PlayPCM*
+; PlayPCM* [event $0C]
 ; Plays a PCM sample
+;----------------------------------------------------------------------------
+; input c .... current bank
+; input hl ... current address
+;----------------------------------------------------------------------------
+; breaks: af, b
 ;****************************************************************************
 
 PlayPCMSFX:
@@ -18,6 +23,10 @@ PlayPCMBGM:
     jp ProcessBGMRun            ; End of subroutine
 
 PlayPCM:
+    ld a, (RAM_GlobalVol+$0C)   ; Are we allowed to play PCM?
+    or a
+    ret z
+    
     call GetParam               ; Get sample ID
     
     ld a, b

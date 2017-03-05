@@ -2,6 +2,7 @@
     include "src-z80/player/pcm.z80"
     include "src-z80/core/bgm.z80"
     include "src-z80/core/sfx.z80"
+    include "src-z80/core/direct.z80"
     include "src-z80/player/fm.z80"
     include "src-z80/player/psg.z80"
     include "src-z80/player/misc.z80"

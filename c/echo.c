@@ -15,8 +15,36 @@ static volatile uint16_t* const z80_reset  = (uint16_t *) 0xA11200;
    { *z80_busreq = 0; }
 #define Z80_RESET() \
    { *z80_reset = 0; \
-     int16_t i; for (i = 8; i >= 0; i--); \
+     volatile int16_t i; for (i = 4; i >= 0; i--); \
      *z80_reset = 0x100; }
+
+// Macro to add delays
+// Using volatile is needlessly ugly but at least portable
+// GCC is already awful at optimizing, so this isn't that bad...
+#define DELAY() \
+   { volatile int16_t i; for (i = 0xFF; i >= 0; i--); }
+
+// Look-up tables for echo_set_volume
+static const uint8_t fm_volumes[] = {
+   0x7F,0x7B,0x77,0x73,0x70,0x6C,0x68,0x65,
+   0x61,0x5E,0x5A,0x57,0x54,0x50,0x4D,0x4A,
+   0x47,0x44,0x41,0x3F,0x3C,0x39,0x36,0x34,
+   0x31,0x2F,0x2D,0x2A,0x28,0x26,0x24,0x22,
+   0x20,0x1E,0x1C,0x1A,0x18,0x16,0x15,0x13,
+   0x12,0x10,0x0F,0x0D,0x0C,0x0B,0x0A,0x09,
+   0x08,0x07,0x06,0x05,0x04,0x04,0x03,0x02,
+   0x02,0x01,0x01,0x01,0x00,0x00,0x00,0x00
+};
+static const uint8_t psg_volumes[] = {
+   0x0F,0x0F,0x0E,0x0E,0x0D,0x0D,0x0C,0x0C,
+   0x0B,0x0B,0x0B,0x0A,0x0A,0x0A,0x09,0x09,
+   0x08,0x08,0x08,0x07,0x07,0x07,0x06,0x06,
+   0x06,0x06,0x05,0x05,0x05,0x04,0x04,0x04,
+   0x04,0x03,0x03,0x03,0x03,0x03,0x02,0x02,
+   0x02,0x02,0x02,0x02,0x01,0x01,0x01,0x01,
+   0x01,0x01,0x01,0x01,0x01,0x00,0x00,0x00,
+   0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
+};
 
 //***************************************************************************
 // echo_init
@@ -34,6 +62,9 @@ void echo_init(const void **list) {
    // would tell it to load the instrument list, but we can't do that here
    // due to linker shenanigans)
    z80_ram[0x1FFF] = 0x00;
+   
+   // Direct stream is empty yet
+   z80_ram[0x1F00] = 0xFF;
    
    // Load the instrument list manually, since thanks to linker shenanigans
    // we can't implement the list properly in ROM :/
@@ -65,6 +96,13 @@ void echo_init(const void **list) {
    while (count-- >= 0)
       *dest++ = *src++;
    
+   // Set up global volume
+   int i;
+   for (i = 0; i < 12; i++)
+      z80_ram[0x1FE0+i] = 0;
+   z80_ram[0x1FEC] = 1;
+   z80_ram[0x1FF1] = 1;
+   
    // Let Echo start running!
    Z80_RESET();
    Z80_RELEASE();
@@ -84,8 +122,7 @@ void echo_send_command(uint8_t cmd) {
    // Is Echo busy yet?
    while (z80_ram[0x1FFF] != 0x00) {
       Z80_RELEASE();
-      int16_t i;
-      for (i = 0x3FF; i >= 0; i--);
+      DELAY();
       Z80_REQUEST();
    }
    
@@ -116,8 +153,7 @@ void echo_send_command_addr(uint8_t cmd, const void *addr) {
    // Is Echo busy yet?
    while (z80_ram[0x1FFF] != 0x00) {
       Z80_RELEASE();
-      int16_t i;
-      for (i = 0x3FF; i >= 0; i--);
+      DELAY();
       Z80_REQUEST();
    }
    
@@ -187,9 +223,11 @@ void echo_stop_bgm(void) {
 // Resumes background music playback.
 //***************************************************************************
 
+/*
 void echo_resume_bgm(void) {
    echo_send_command(ECHO_CMD_RESUMEBGM);
 }
+*/
 
 //***************************************************************************
 // echo_play_sfx
@@ -209,6 +247,95 @@ void echo_play_sfx(const void *ptr) {
 
 void echo_stop_sfx(void) {
    echo_send_command(ECHO_CMD_STOPSFX);
+}
+
+//***************************************************************************
+// echo_play_direct
+// Injects events into the BGM stream for the next tick.
+//---------------------------------------------------------------------------
+// param ptr: pointer to BGM stream
+//***************************************************************************
+
+void echo_play_direct(const void *ptr) {
+   // We need access to Z80 bus
+   Z80_REQUEST();
+   
+   // Check where we can start writing events
+   volatile uint8_t *dest = &z80_ram[0x1F00];
+   while (*dest != 0xFF) dest++;
+   
+   // Write the events
+   const uint8_t *src = (uint8_t*)(ptr);
+   for (;;) {
+      uint8_t byte = *src++;
+      *dest++ = byte;
+      if (byte == 0xFF) break;
+   }
+   
+   // Done with the Z80
+   Z80_RELEASE();
+}
+
+//***************************************************************************
+// echo_set_volume
+// Changes the global volume for every channel.
+//---------------------------------------------------------------------------
+// param vol: new volume (0 = quietest, 255 = loudest)
+//***************************************************************************
+
+void echo_set_volume(uint8_t vol) {
+   // We need access to Z80 bus
+   Z80_REQUEST();
+   
+   // Set FM volume values
+   uint8_t fm_vol = fm_volumes[vol >> 2];
+   z80_ram[0x1FE0] = fm_vol;
+   z80_ram[0x1FE1] = fm_vol;
+   z80_ram[0x1FE2] = fm_vol;
+   z80_ram[0x1FE3] = fm_vol;
+   z80_ram[0x1FE4] = fm_vol;
+   z80_ram[0x1FE5] = fm_vol;
+   z80_ram[0x1FE6] = fm_vol;
+   z80_ram[0x1FE7] = fm_vol;
+   
+   // Set PSG volume values
+   uint8_t psg_vol = psg_volumes[vol >> 2];
+   z80_ram[0x1FE8] = psg_vol;
+   z80_ram[0x1FE9] = psg_vol;
+   z80_ram[0x1FEA] = psg_vol;
+   z80_ram[0x1FEB] = psg_vol;
+   
+   // Determine whether to enable PCM
+   z80_ram[0x1FEC] = (vol >= 0x40) ? 1 : 0;
+   
+   // Tell Echo to update all the volumes
+   z80_ram[0x1FF1] = 1;
+   
+   // Done with the Z80
+   Z80_RELEASE();
+}
+
+//***************************************************************************
+// echo_set_volume_ex
+// Changes the global volume for each individual channel.
+//---------------------------------------------------------------------------
+// param ptr: pointer to array with volume values
+//***************************************************************************
+
+void echo_set_volume_ex(const uint8_t *ptr) {
+   // We need access to Z80 bus
+   Z80_REQUEST();
+   
+   // Store the new volume values
+   int i;
+   for (i = 0; i < 13; i++)
+      z80_ram[0x1FE0+i] = ptr[i];
+   
+   // Tell Echo to update all the volumes
+   z80_ram[0x1FF1] = 1;
+   
+   // Done with the Z80
+   Z80_RELEASE();
 }
 
 //***************************************************************************
@@ -238,6 +365,8 @@ uint16_t echo_get_status(void) {
    status = z80_ram[0x1FF0];
    if (z80_ram[0x1FFF] != 0)
       status |= ECHO_STAT_BUSY;
+   if (z80_ram[0x1F00] != 0xFF)
+      status |= ECHO_STAT_DIRBUSY;
    
    // Done with the Z80
    Z80_RELEASE();

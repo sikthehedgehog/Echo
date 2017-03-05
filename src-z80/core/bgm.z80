@@ -97,6 +97,8 @@ ResumeBGM:
 ;****************************************************************************
 ; ProcessBGM
 ; Processes a tick for a BGM
+;----------------------------------------------------------------------------
+; breaks: all
 ;****************************************************************************
 
 ProcessBGM:
@@ -153,6 +155,7 @@ ProcessBGMSkip:
     cp $FE
     jp z, SetDelayBGM           ; Event $FE: set delay
     cp $FF
+ProcessBGMEventFF:
     jp z, StopBGMEvent          ; Event $FF: stop BGM
     cp $FC
     jp z, LoopBGM               ; Event $FC: loop BGM
@@ -192,8 +195,11 @@ ProcessBGMSkip:
 
     cp $F8                      ; Events $F0-$F7: set FM parameters
     jp c, SetFMParamBGM
+    cp $FA                      ; Events $F8-$F9: set FM register
+    jp c, SetFMRegBGM
 
     PollPCM                     ; FFFFFFFFF bad event >:(
+ProcessBGMEnd:
     jp StopBGMEvent             ; End of subroutine
 
 ProcessBGMSkip2:                ; This is where we land after a locked event

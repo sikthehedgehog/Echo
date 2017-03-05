@@ -19,15 +19,19 @@ enum {
 /* Echo status flags */
 #define ECHO_STAT_BGM      0x0002   /* Background music is playing */
 #define ECHO_STAT_SFX      0x0001   /* Sound effect is playing */
+#define ECHO_STAT_DIRBUSY  0x4000   /* Echo isn't done with direct events */
 #define ECHO_STAT_BUSY     0x8000   /* Echo still didn't parse command */
 
 /* Function prototypes */
 void echo_init(const void **);
 void echo_play_bgm(const void *);
 void echo_stop_bgm(void);
-void echo_resume_bgm(void);
+/*void echo_resume_bgm(void);*/
 void echo_play_sfx(const void *);
 void echo_stop_sfx(void);
+void echo_play_direct(const void *);
+void echo_set_volume(uint8_t);
+void echo_set_volume_ex(const uint8_t *);
 void echo_set_pcm_rate(uint8_t);
 uint16_t echo_get_status(void);
 void echo_send_command(uint8_t);

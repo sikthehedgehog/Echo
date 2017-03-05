@@ -44,3 +44,47 @@ SetDelayShort:
     ld (hl), b
 
     ret                         ; End of subroutine
+
+;****************************************************************************
+; RefreshVolume
+; Reloads the volume for all channels.
+;----------------------------------------------------------------------------
+; breaks: all
+;****************************************************************************
+
+RefreshVolume:
+    ld hl, $1FF0                ; Update FM volume
+    ld de, RAM_FMVol
+    ld c, 8
+.fixfmvol:
+    ld a, (de)
+    ld b, (hl)
+    add b
+    jp p, .fixfmvolok
+    ld a, $7F
+.fixfmvolok:
+    ld b, a
+    ld a, l
+    call SetFMVolLoad
+    inc l
+    inc e
+    dec c
+    jr nz, .fixfmvol
+    
+    ld hl, $1FE8                ; Update PSG volume
+    ld de, RAM_PSGData+1
+    ld bc, $0410
+.fixpsgvol:
+    ld a, (hl)
+    ld (de), a
+    inc l
+    ld a, e
+    add a, c
+    ld e, a
+    PollPCM
+    djnz .fixpsgvol
+    
+    xor a                       ; Mark that volume was refreshed
+    ld ($1FF1), a
+    
+    ret                         ; End of subroutine

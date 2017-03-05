@@ -51,11 +51,6 @@ Echo_StopBGM
    Stops playback of background music. Used both to stop and to pause music
    (the latter can be undone with Echo_ResumeBGM, see below).
 
-Echo_ResumeBGM
-
-   Resumes playback of whatever background music was playing last time before
-   Echo_StopBGM was called. Used when you want to unpause music.
-
 =============================================================================
 
 *** Sound effects ***
@@ -71,6 +66,28 @@ Echo_StopSFX
 
 =============================================================================
 
+*** Direct events ***
+
+Echo_PlayDirect
+
+   Injects events to be played as part of the BGM the next tick. The register
+   a0 points to the ESF data to be injected.
+
+   The injected events are a small stream on their own. The last event must
+   be $FF (this will return back to the BGM). Do *not* issue $FC, $FD or $FE
+   events, as you'll just break everything instead.
+
+   The buffer is small, so don't go overboard. There's room for up to 128
+   bytes (though again, each event is just 2-3 bytes). If there were direct
+   events pending to play, the new events will be appended at the end, so
+   take this into account when it comes to the buffer usage. You can check
+   if there are pending events with Echo_GetStatus (see bit 14) if you're
+   worried about running out of space.
+   
+   The buffer is only checked every tick.
+
+=============================================================================
+
 *** Control ***
 
 Echo_GetStatus
@@ -80,11 +97,31 @@ Echo_GetStatus
    
    Bit 0 .... Sound effect is playing
    Bit 1 .... Background music is playing
+   Bit 14 ... Echo isn't done parsing direct events
    Bit 15 ... Echo is busy (can't take commands)
    
    The API will automatically wait if you try to send a command while Echo is
    busy, so the only reason to check for that is if you don't want to halt
    the 68000 until Echo is ready to take more commands.
+
+Echo_SetVolume
+
+   Sets the global volume. Register d0 is a byte value ranging from 0
+   (quietest) to 255 (loudest), and every channel is affected immediately.
+   The scale of the volume in this case is *linear*.
+   
+   Note that since PCM doesn't have volume, it gets toggled on/off depending
+   on the volume value (the cut off point is at 25%).
+
+Echo_SetVolumeEx
+
+   Sets the global volume for each channel separately. Register a0 points to
+   a list of 13 bytes (one for each Echo channel). Values for FM and PSG
+   channels are given in the same way as in events, that is: logarithmic
+   scale, 0..127 for FM, 0..15 for PSG, lower = louder.
+   
+   The last byte (the one belonging to the PCM channel) is used to toggle
+   whether PCM plays, either 0 (disabled) or 1 (enabled).
 
 =============================================================================
 

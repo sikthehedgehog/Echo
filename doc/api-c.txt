@@ -55,11 +55,6 @@ void echo_stop_bgm()
    Stops playback of background music. Used both to stop and to pause music
    (the latter can be undone with echo_resume_bgm, see below).
 
-void echo_resume_bgm()
-
-   Resumes playback of whatever background music was playing last time before
-   echo_stop_bgm was called. Used when you want to unpause music.
-
 =============================================================================
 
 *** Sound effects ***
@@ -75,6 +70,28 @@ void echo_stop_sfx()
 
 =============================================================================
 
+*** Direct events ***
+
+void echo_play_direct(const void *esf)
+
+   Injects events to be played as part of the BGM the next tick. The
+   parameter 'esf' points to the ESF data to be injected.
+
+   The injected events are a small stream on their own. The last event must
+   be $FF (this will return back to the BGM). Do *not* issue $FC, $FD or $FE
+   events, as you'll just break everything instead.
+
+   The buffer is small, so don't go overboard. There's room for up to 128
+   bytes (though again, each event is just 2-3 bytes). If there were direct
+   events pending to play, the new events will be appended at the end, so
+   take this into account when it comes to the buffer usage. You can check
+   if there are pending events with Echo_GetStatus (see ECHO_STAT_DIRBUSY)
+   if you're worried about running out of space.
+   
+   The buffer is only checked every tick.
+
+=============================================================================
+
 *** Control ***
 
 uint16_t echo_get_status()
@@ -82,13 +99,33 @@ uint16_t echo_get_status()
    Gets the current status of Echo. Returns an OR of the following flags,
    as relevant:
    
-   ECHO_STAT_BGM .... Background music is playing
-   ECHO_STAT_SFX .... Sound effect is playing
-   ECHO_STAT_BUSY ... Echo is busy (can't take commands)
+   ECHO_STAT_BGM ....... Background music is playing
+   ECHO_STAT_SFX ....... Sound effect is playing
+   ECHO_STAT_DIRBUSY ... Echo isn't done parsing direct events
+   ECHO_STAT_BUSY ...... Echo is busy (can't take commands)
    
    The API will automatically wait if you try to send a command while Echo is
    busy, so the only reason to check for that is if you don't want to halt
    the 68000 until Echo is ready to take more commands.
+
+void echo_set_volume(uint8_t vol)
+
+   Sets the global volume. The value 'vol' ranges from 0 (quietest) to 255
+   (loudest), and every channel is affected immediately. The scale of the
+   volume in this case is *linear*.
+   
+   Note that since PCM doesn't have volume, it gets toggled on/off depending
+   on the volume value (the cut off point is at 25%).
+
+void echo_set_volume_ex(const uint8_t *ptr)
+
+   Sets the global volume for each channel separately. The parameter 'ptr'
+   points to a list of 13 bytes (one for each Echo channel). Values for FM
+   and PSG channels are given in the same way as in events, that is:
+   logarithmic scale, 0..127 for FM, 0..15 for PSG, lower = louder.
+   
+   The last byte (the one belonging to the PCM channel) is used to toggle
+   whether PCM plays, either 0 (disabled) or 1 (enabled).
 
 =============================================================================
 
