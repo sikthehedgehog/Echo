@@ -107,6 +107,8 @@ EVENT LIST
     
     $F8rrnn ... Set FM register in bank 0
     $F9rrnn ... Set FM register in bank 1
+    $FAnn ..... Set flags
+    $FBnn ..... Clear flags
     
     $FC ....... [BGM] Go to loop
     $FD ....... [BGM] Set loop point
