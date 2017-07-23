@@ -432,7 +432,13 @@ LoadFMDirect:
 ;****************************************************************************
 
 SetFMVolSFX:
-    call SetFMVolSFXEvent       ; We're just a wrapper
+    push af
+    PollPCM
+    call GetParam               ; Get new volume
+    PollPCM
+    pop af
+    
+    call SetFMVolLoad           ; We're just a wrapper
     jp ProcessSFXRun            ; End of subroutine
 
 SetFMVolBGM:
@@ -487,12 +493,21 @@ SetFMVolBGM:
     call SetFMVolLoad           ; We're just a wrapper
     jp ProcessBGMRun            ; End of subroutine
 
-SetFMVolSFXEvent:
-    push af
-    PollPCM
-    call GetParam               ; Get new volume
-    PollPCM
-    pop af
+;----------------------------------------------------------------------------
+; input a = channel ID
+; input b = new volume level
+;----------------------------------------------------------------------------
+
+SetFMVolTempLoad:
+    push bc
+    push de
+    push hl
+    jp SetFMVolDoIt
+
+;----------------------------------------------------------------------------
+; input a = channel ID (bottom 3 bits)
+; input b = new volume level
+;----------------------------------------------------------------------------
 
 SetFMVolLoad:
     push bc
@@ -508,6 +523,7 @@ SetFMVolLoad:
     ld (hl), b
     pop af
     
+SetFMVolDoIt:
     push af
     ld h, RAM_FMData>>8         ; Get address of FM data
     add RAM_FMData&$FF

@@ -52,8 +52,15 @@ void echo_play_bgm(const void *esf)
 
 void echo_stop_bgm()
 
-   Stops playback of background music. Used both to stop and to pause music
-   (the latter can be undone with echo_resume_bgm, see below).
+   Stops playback of background music. Used both to stop and to pause music.
+
+void echo_pause_bgm()
+
+   Pauses BGM playback (SFXs should be unaffected).
+
+void echo_resume_bgm()
+
+   Resumes BGM playback after it has been paused with echo_pause_bgm.
 
 =============================================================================
 
@@ -120,12 +127,16 @@ void echo_set_volume(uint8_t vol)
 void echo_set_volume_ex(const uint8_t *ptr)
 
    Sets the global volume for each channel separately. The parameter 'ptr'
-   points to a list of 13 bytes (one for each Echo channel). Values for FM
+   points to a list of 16 bytes (one for each Echo channel). Values for FM
    and PSG channels are given in the same way as in events, that is:
    logarithmic scale, 0..127 for FM, 0..15 for PSG, lower = louder.
    
    The last byte (the one belonging to the PCM channel) is used to toggle
    whether PCM plays, either 0 (disabled) or 1 (enabled).
+   
+   NOTE: the Echo 1.4 docs requested for 13 bytes instead of 16. This has
+   been changed for the sake of expansion. Currently the extra bytes are
+   ignored, but consider adapting your code (just set them to zero).
 
 =============================================================================
 
@@ -162,6 +173,7 @@ void echo_send_command(uint8_t command)
    command to send, and may be one of the following:
    
    ECHO_CMD_STOPBGM ..... Stop background music playback
+   ECHO_CMD_PAUSEBGM .... Pause background music playback
    ECHO_CMD_RESUMEBGM ... Resume background music playback
    ECHO_CMD_STOPSFX ..... Stop sound effect playback
 

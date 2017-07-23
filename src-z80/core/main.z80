@@ -4,10 +4,11 @@
 ;****************************************************************************
 
 EntryPoint:
-    ld sp, RAM_Stack            ; Init stack
+    xor a                       ; Reset Echo status (we don't clear
+    ld (RAM_Status), a          ; RAM_Command since Echo_Init fills in values
+    ld (RAM_Command2), a        ; before Echo gets to run!)
 
-    xor a                       ; Reset Echo status
-    ld (RAM_Status), a
+    ld sp, RAM_Stack            ; Init stack
 
     ld hl, $7F11                ; Mute PSG
     ld (hl), $9F
@@ -88,21 +89,10 @@ EntryPoint:
     jp IdleLoop                 ; Go into idle loop
 
 ;****************************************************************************
-; PollPCM
-; Used to update PCM while not idle
-;----------------------------------------------------------------------------
-; breaks: af
-;****************************************************************************
-
-PollPCM: macro
-    ld a, ($4000)
-    rrca
-    call c, UpdatePCM
-    endm
-
-;****************************************************************************
 ; RunCommand
 ; Checks which command to run
+;----------------------------------------------------------------------------
+; notes: doesn't return
 ;----------------------------------------------------------------------------
 ; To-do: replace with pointer list?
 ;****************************************************************************
@@ -122,17 +112,36 @@ RunCommand:
     jp z, ResumeBGM
     dec a                       ; Command $07: set PCM rate
     jp z, SetPCMRate
+    dec a                       ; Command $08: pause BGM
+    jp z, PauseBGM
 
     PollPCM
 
-    xor a                       ; Bad command, ignore >:(
-    ld (RAM_Command), a
+    ; Bad command, ignore >:(
 
+;****************************************************************************
+; EndOfCommand
+; Cleans up when a command finishes
+;----------------------------------------------------------------------------
+; notes: doesn't return
+;****************************************************************************
+
+EndOfCommand:
+    ld hl, ($1FF8)              ; Copy second slot into first
+    ld ($1FFC), hl
+    ld hl, ($1FFA)
+    ld ($1FFE), hl
+    
+    xor a                       ; Free up second slot
+    ld (RAM_Command2), a
+    
     PollPCM
 
 ;****************************************************************************
 ; IdleLoop
 ; Loop that runs when not processing SFX or BGM
+;----------------------------------------------------------------------------
+; notes: doesn't return (d'oh)
 ;****************************************************************************
 
 IdleLoop:
@@ -153,13 +162,11 @@ IdleLoop:
 ;****************************************************************************
 ; DoTick
 ; Called whenever a new tick triggers
+;----------------------------------------------------------------------------
+; notes: doesn't return
 ;****************************************************************************
 
 DoTick:
-;    ld a, (ix+0)
-;    bit 0, a
-;    call nz, UpdatePCM
-
     PollPCM
 
     ld (ix+0), $27              ; Retrigger the timer
@@ -181,6 +188,9 @@ DoTick_SFXSkip:
 
     PollPCM
     
+    ld a, (RAM_Paused)          ; BGMs are paused?
+    or a
+    jr nz, DoTick_BGMSkip
 DoTick_BGM:                     ; Process BGMs
     jp DoTick_BGMSkip
 DoTick_BGMSkip:
@@ -195,57 +205,30 @@ DoTick_PSGSkip:
     jp IdleLoop                 ; End of subroutine
 
 ;****************************************************************************
-; BankSwitch
-; Switches into a new bank (won't update player status!)
-;
-; input A .... New bank to switch into
-; input HL ... Must be $6000
-; breaks ..... AF
-;****************************************************************************
-
-BankSwitch: macro
-    ld (hl), a
-    rrca
-    ld (hl), a
-    rrca
-    ld (hl), a
-    rrca
-    ld (hl), a
-    rrca
-    ld (hl), a
-    rrca
-    ld (hl), a
-    rrca
-    ld (hl), a
-    ld (hl), h
-    rrca
-    ld (hl), a
-    endm
-
-;****************************************************************************
 ; LoadList [command $01]
 ; Loads the pointer list
 ;****************************************************************************
 
 LoadList:
-    ld hl, RAM_ComBank          ; Get command parameters
-    ld c, (hl)
-    inc l
-    ld e, (hl)
-    inc l
-    ld d, (hl)
-    ex de, hl
-
-    xor a                       ; Command parsed
-    ld (RAM_Command), a
+;    ld hl, RAM_ComBank          ; Get command parameters
+;    ld c, (hl)
+;    inc l
+;    ld e, (hl)
+;    inc l
+;    ld d, (hl)
+;    ex de, hl
+    
+    ld hl, (RAM_ComAddr)        ; Get command parameters
+    ld a, (RAM_ComBank)
+    ld c, a
 
     ld de, RAM_PointerList      ; Where the pointer list starts
 
-.loop:
+.loadloop:
     call GetParam               ; Get high byte address
     ld a, b                     ; Is it the end of the list?
     or a
-    jp z, .end
+    jp z, .loadend
     ld (de), a                  ; Store high byte address
     inc d
     
@@ -261,10 +244,10 @@ LoadList:
     dec d                       ; Go for next byte
     dec d
     inc e
-    jp .loop
+    jp .loadloop
 
-.end:
-    jp IdleLoop                 ; End of subroutine
+.loadend:
+    jp EndOfCommand             ; End of subroutine
 
 ;****************************************************************************
 ; GetParam

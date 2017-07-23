@@ -98,7 +98,7 @@ void echo_init(const void **list) {
    
    // Set up global volume
    int i;
-   for (i = 0; i < 12; i++)
+   for (i = 0; i < 16; i++)
       z80_ram[0x1FE0+i] = 0;
    z80_ram[0x1FEC] = 1;
    z80_ram[0x1FF1] = 1;
@@ -120,15 +120,19 @@ void echo_send_command(uint8_t cmd) {
    Z80_REQUEST();
    
    // Is Echo busy yet?
-   while (z80_ram[0x1FFF] != 0x00) {
-      Z80_RELEASE();
-      DELAY();
-      Z80_REQUEST();
+   volatile uint8_t *ptr = &z80_ram[0x1FFC]
+   if (ptr[3] != 0x00) {
+      ptr -= 4;
+      while (ptr[3] != 0x00) {
+         Z80_RELEASE();
+         DELAY();
+         Z80_REQUEST();
+      }
    }
    
    // Write the command
-   z80_ram[0x1FFF] = cmd;
-
+   ptr[3] = cmd;
+   
    // Done with the Z80
    Z80_RELEASE();
 }
@@ -151,21 +155,25 @@ void echo_send_command_addr(uint8_t cmd, const void *addr) {
    Z80_REQUEST();
    
    // Is Echo busy yet?
-   while (z80_ram[0x1FFF] != 0x00) {
-      Z80_RELEASE();
-      DELAY();
-      Z80_REQUEST();
+   volatile uint8_t *ptr = &z80_ram[0x1FFC]
+   if (ptr[3] != 0x00) {
+      ptr -= 4;
+      while (ptr[3] != 0x00) {
+         Z80_RELEASE();
+         DELAY();
+         Z80_REQUEST();
+      }
    }
    
    // Write the command
-   z80_ram[0x1FFF] = cmd;
-   z80_ram[0x1FFD] = param;
+   ptr[3] = cmd;
+   ptr[1] = param;
    param >>= 8;
-   z80_ram[0x1FFE] = param | 0x80;
+   ptr[2] = param | 0x80;
    param >>= 7;
    param = (param & 0x7F) | (param >> 1 & 0x80);
-   z80_ram[0x1FFC] = param;
-
+   ptr[0] = param;
+   
    // Done with the Z80
    Z80_RELEASE();
 }
@@ -183,17 +191,20 @@ void echo_send_command_byte(uint8_t cmd, uint8_t byte) {
    Z80_REQUEST();
    
    // Is Echo busy yet?
-   while (z80_ram[0x1FFF] != 0x00) {
-      Z80_RELEASE();
-      int16_t i;
-      for (i = 0x3FF; i >= 0; i--);
-      Z80_REQUEST();
+   volatile uint8_t *ptr = &z80_ram[0x1FFC]
+   if (ptr[3] != 0x00) {
+      ptr -= 4;
+      while (ptr[3] != 0x00) {
+         Z80_RELEASE();
+         DELAY();
+         Z80_REQUEST();
+      }
    }
    
    // Write the command
-   z80_ram[0x1FFF] = cmd;
-   z80_ram[0x1FFC] = byte;
-
+   ptr[3] = cmd;
+   ptr[0] = byte;
+   
    // Done with the Z80
    Z80_RELEASE();
 }
@@ -219,15 +230,22 @@ void echo_stop_bgm(void) {
 }
 
 //***************************************************************************
+// echo_pause_bgm
+// Pauses background music playback.
+//***************************************************************************
+
+void echo_pause_bgm(void) {
+   echo_send_command(ECHO_CMD_PAUSEBGM);
+}
+
+//***************************************************************************
 // echo_resume_bgm
 // Resumes background music playback.
 //***************************************************************************
 
-/*
 void echo_resume_bgm(void) {
    echo_send_command(ECHO_CMD_RESUMEBGM);
 }
-*/
 
 //***************************************************************************
 // echo_play_sfx
@@ -328,7 +346,7 @@ void echo_set_volume_ex(const uint8_t *ptr) {
    
    // Store the new volume values
    int i;
-   for (i = 0; i < 13; i++)
+   for (i = 0; i < 16; i++)
       z80_ram[0x1FE0+i] = ptr[i];
    
    // Tell Echo to update all the volumes
@@ -363,7 +381,7 @@ uint16_t echo_get_status(void) {
    // Retrieve status from Z80 RAM
    uint16_t status = 0;
    status = z80_ram[0x1FF0];
-   if (z80_ram[0x1FFF] != 0)
+   if (z80_ram[0x1FFB] != 0)
       status |= ECHO_STAT_BUSY;
    if (z80_ram[0x1F00] != 0xFF)
       status |= ECHO_STAT_DIRBUSY;
@@ -373,4 +391,47 @@ uint16_t echo_get_status(void) {
    
    // Return status
    return status;
+}
+
+//***************************************************************************
+// echo_get_flags
+// Gets the current values of the flags.
+//---------------------------------------------------------------------------
+// return: bitmask with flags
+//***************************************************************************
+
+uint8_t echo_get_flags(void)
+{
+   Z80_REQUEST();
+   uint8_t flags = z80_ram[0x1FF2];
+   Z88_RELEASE();
+   return flags;
+}
+
+//***************************************************************************
+// echo_set_flags
+// Sets flags from the 68000.
+//---------------------------------------------------------------------------
+// param flags: bitmask of flags to be set (1 = set, 0 = intact)
+//***************************************************************************
+
+void echo_set_flags(uint8_t flags)
+{
+   Z80_REQUEST();
+   z80_ram[0x1FF2] |= flags;
+   Z80_RELEASE();
+}
+
+//***************************************************************************
+// echo_clear_flags
+// Clears flags from the 68000.
+//---------------------------------------------------------------------------
+// param flags: bitmask of flags to be cleared (1 = clear, 0 = intact)
+//***************************************************************************
+
+void echo_clear_flags(uint8_t flags)
+{
+   Z80_REQUEST();
+   z80_ram[0x1FF2] &= ~flags;
+   Z80_RELEASE();
 }

@@ -42,13 +42,23 @@ RAM_SFXPlaying:     ds 1              ; Set if a SFX is playing
 RAM_SFXDelay:       ds 1              ; How many ticks to wait
 RAM_SFXBank:        ds 1              ; Current SFX bank
 RAM_SFXAddress:     ds 2              ; Current SFX address
+RAM_SFXLoopPoint:   ds 3              ; SFX loop point
+
+RAM_Paused:         ds 1            ; Set if BGM stream is paused
+
+RAM_PCMBank1:       db 1            ; (not implemented yet)
+RAM_PCMAddr1:       dw 1            ; (not implemented yet)
+RAM_PCMBank2:       db 1            ; (not implemented yet)
+RAM_PCMAddr2:       dw 1            ; (not implemented yet)
 
 RAM_Scratch:        ds 32           ; Scratch bytes, may be useful when
                                       ; buffering to speed up to avoid bank
                                       ; switching conflicts
 
     ds $F0-($&$FF), $FF
-RAM_PCMBuffer:      ds 16           ; PCM buffer
+RAM_PCMBuffer:      ds 0            ; PCM buffer
+RAM_PCMBuffer1:     ds 8            ; (not implemented yet)
+RAM_PCMBuffer2:     ds 8            ; (not implemented yet)
 
 ;****************************************************************************
 ; Pointer list starts being stored from here
@@ -71,6 +81,12 @@ RAM_Stack:          equ $1FE0       ; Where stack starts
 RAM_GlobalVol:      equ $1FE0       ; Global volume for all channels
 RAM_Status:         equ $1FF0       ; Current playback status
 RAM_RefreshVol:     equ $1FF1       ; Set to refresh all volumes
+RAM_Flags:          equ $1FF2       ; Track flags
+
 RAM_Command:        equ $1FFF       ; Command type
 RAM_ComAddr:        equ $1FFD       ; Command address parameter
 RAM_ComBank:        equ $1FFC       ; Command bank parameter
+
+RAM_Command2:       equ $1FFB       ; (second slot for all the above)
+RAM_ComAddr2:       equ $1FF9
+RAM_ComBank2:       equ $1FF8

@@ -20,6 +20,7 @@ Unless stated otherwise, calling the API subroutines will *not* modify the
 *** Initialization ***
 
 Echo_Init
+   in a0 = pointer to instrument list
 
    Initializes Echo. Loads the instrument list, loads the Z80 engine and gets
    it running. You need to call this before you can use Echo (usually when
@@ -42,20 +43,29 @@ Echo_Init
 *** Background music ***
 
 Echo_PlayBGM
+   in a0 = pointer to ESF data to play
 
    Starts playback of the specified background music. The register a0 points
    to the ESF data for the background music.
 
 Echo_StopBGM
 
-   Stops playback of background music. Used both to stop and to pause music
-   (the latter can be undone with Echo_ResumeBGM, see below).
+   Stops playback of background music. Used both to stop and to pause music.
+
+Echo_PauseBGM
+
+   Pauses BGM playback (SFXs should be unaffected).
+
+Echo_ResumeBGM
+
+   Resumes BGM playback after it has been paused with Echo_PauseBGM.
 
 =============================================================================
 
 *** Sound effects ***
 
 Echo_PlaySFX
+   in a0 = pointer to ESF data to play
 
    Starts playback of the specified sound effect. The register a0 points to
    the ESF data for the sound effect.
@@ -69,6 +79,7 @@ Echo_StopSFX
 *** Direct events ***
 
 Echo_PlayDirect
+   in a0 = pointer to ESF data to inject
 
    Injects events to be played as part of the BGM the next tick. The register
    a0 points to the ESF data to be injected.
@@ -91,6 +102,7 @@ Echo_PlayDirect
 *** Control ***
 
 Echo_GetStatus
+   out d0 = status (see below)
 
    Gets the current status of Echo. The status is returned as a word in d0,
    with the following bits set as relevant:
@@ -105,6 +117,7 @@ Echo_GetStatus
    the 68000 until Echo is ready to take more commands.
 
 Echo_SetVolume
+   in d0 = new volume ($00 = quietest, $FF = loudest)
 
    Sets the global volume. Register d0 is a byte value ranging from 0
    (quietest) to 255 (loudest), and every channel is affected immediately.
@@ -114,20 +127,26 @@ Echo_SetVolume
    on the volume value (the cut off point is at 25%).
 
 Echo_SetVolumeEx
+   in a0 = pointer to volume data (see below)
 
    Sets the global volume for each channel separately. Register a0 points to
-   a list of 13 bytes (one for each Echo channel). Values for FM and PSG
+   a list of 16 bytes (one for each Echo channel). Values for FM and PSG
    channels are given in the same way as in events, that is: logarithmic
    scale, 0..127 for FM, 0..15 for PSG, lower = louder.
    
    The last byte (the one belonging to the PCM channel) is used to toggle
    whether PCM plays, either 0 (disabled) or 1 (enabled).
+   
+   NOTE: the Echo 1.4 docs requested for 13 bytes instead of 16. This has
+   been changed for the sake of expansion. Currently the extra bytes are
+   ignored, but consider adapting your code (just set them to zero).
 
 =============================================================================
 
 *** Settings ***
 
 Echo_SetPCMRate
+   in d0 = new PCM rate (see below)
 
    Changes the sample rate of PCM. Note this is a global parameter as it
    affects both BGM and SFX. The value is what one would write in timer A of
@@ -153,17 +172,22 @@ Echo_SetPCMRate
 *** Raw access ***
 
 Echo_SendCommand
+   in d0 = command
 
    Sends an argument-less command to Echo. The command ID is given as a byte
    in register d0.
 
 Echo_SendCommandAddr
+   in d0 = command
+   in a0 = address
 
    Sends a command to Echo that takes an address as its argument. The command
    ID is given as a byte in register d0, while the address argument is given
    in register a0.
 
 Echo_SendCommandByte
+   in d0 = command
+   in d1 = argument
 
    Sends a command to Echo that takes a byte as its argument. The command ID
    is given as a byte in register d0, while the byte argument is given in

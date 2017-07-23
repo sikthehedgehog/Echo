@@ -25,13 +25,14 @@ PlayBGM:
 
     PollPCM
 
-    xor a                       ; Command parsed
-    ld (RAM_Command), a
+    xor a                       ; Playing a BGM immediately unpauses playback
+    ld (RAM_Paused), a
 
+    inc a
     ld hl, RAM_BGMData          ; Set BGM as playing
-    ld (hl), $01
+    ld (hl), a
     inc l                       ; No delays!
-    ld (hl), $01
+    ld (hl), a
     inc l                       ; Store BGM start bank
     ld (hl), c
     inc l                       ; Store BGM start address (low)
@@ -44,7 +45,71 @@ PlayBGM:
     ld hl, ProcessBGM           ; Tell Echo to process BGM
     ld (DoTick_BGM+1), hl
     
-    jp IdleLoop                 ; End of subroutine
+    jp EndOfCommand             ; End of subroutine
+
+;****************************************************************************
+; PauseBGM [command $08]
+; Pauses a playing BGM
+;----------------------------------------------------------------------------
+; breaks: all
+;****************************************************************************
+
+PauseBGM:
+    ld a, (RAM_BGMPlaying)      ; Is BGM even playing?
+    or a
+    jp z, EndOfCommand
+    
+    ld a, 1                     ; Halt BGM playback
+    ld (RAM_Paused), a
+
+;----------------------------------------------------------------------------
+
+    ld b, $7F                   ; Mute all FM channels
+    ld c, 7
+    ld hl, RAM_Locked+7
+.mutefm:
+    PollPCM
+    ld a, (hl)
+    or a
+    jr nz, .nofmmute
+    ld a, c
+    call SetFMVolTempLoad
+.nofmmute:
+    PollPCM
+    dec l
+    dec c
+    jp p, .mutefm
+    
+    ld b, 4                     ; Mute all PSG channels
+    ld c, $0F
+    ld de, RAM_Locked+8
+    ld hl, RAM_PSGData
+.mutepsg:
+    PollPCM
+    ld a, (de)
+    or a
+    jr nz, .nopsgmute
+    ld a, (hl)
+    and $80
+    or c,
+    ld (hl), a
+.nopsgmute:
+    PollPCM
+    ld a, l
+    add 16
+    ld l, a
+    inc e
+    djnz .mutepsg
+
+;----------------------------------------------------------------------------
+
+    ld a, (RAM_Locked+6)        ; Mute PCM channel
+    or a
+    call z, StopPCM
+
+;----------------------------------------------------------------------------
+
+    jp EndOfCommand             ; End of subroutine
 
 ;****************************************************************************
 ; ResumeBGM [command $06]
@@ -54,45 +119,37 @@ PlayBGM:
 ;****************************************************************************
 
 ResumeBGM:
-    xor a                       ; Command parsed
-    ld (RAM_Command), a
-
-;----------------------------------------------------------------------------
-    
-    ld b, 8                     ; Restore all FM channels
-    ld de, RAM_Locked+7
-.restorefm:
-
-    PollPCM
-
-    ld a, (de)                    ; Check if this channel is locked
+    ld a, (RAM_BGMPlaying)      ; Was BGM even playing?
     or a
-    jp nz, .fmlocked
-
+    jp z, EndOfCommand
+    
+    xor a
+    ld (RAM_Paused), a          ; Resume BGM playback
+    
+    ld b, 4                     ; Restore PSG channels
+    ld de, RAM_Locked+11
+    ld hl, RAM_PSGData+63
+.resumepsg:
     PollPCM
+    ld c, (hl)
+    ld a, l
+    sub 15
+    ld l, a
+    ld a, (de)
+    or a
+    jr nz, .nopsgresume
+    ld a, (hl)
+    and $80
+    or c
+    ld (hl), a
+.nopsgresume:
+    PollPCM
+    dec l
+    dec e
+    djnz .resumepsg
     
-    dec b                         ; Restore FM channel
-    call RestoreFM
-    inc b
-    
-.fmlocked:
-    dec e                         ; Go for next channel to restore
-    dec b
-    jp nz, .restorefm
-
-;----------------------------------------------------------------------------
-
-    ld a, (RAM_Status)          ; Show BGM playback in Echo's status
-    or $02
-    ld (RAM_Status), a
-
-    ld hl, RAM_BGMData          ; Set BGM as playing
-    ld (hl), $01
-    
-    ld hl, ProcessBGM           ; Tell Echo to process BGM
-    ld (DoTick_BGM+1), hl
-    
-    jp IdleLoop                 ; End of subroutine
+    call RefreshVolume          ; Restore remaining channels
+    jp EndOfCommand             ; End of subroutine
 
 ;****************************************************************************
 ; ProcessBGM
@@ -197,6 +254,9 @@ ProcessBGMEventFF:
     jp c, SetFMParamBGM
     cp $FA                      ; Events $F8-$F9: set FM register
     jp c, SetFMRegBGM
+    jp z, SetFlagsBGM           ; Events $FA-$FB: set/clear flags
+    cp $FB
+    jp z, ClearFlagsBGM
 
     PollPCM                     ; FFFFFFFFF bad event >:(
 ProcessBGMEnd:
@@ -234,10 +294,8 @@ StopBGMEvent:
     jp DoTick_BGMSkip           ; End of subroutine
 
 StopBGMCmd:
-    xor a                       ; Command parsed
-    ld (RAM_Command), a
     call StopBGM                ; We're just a wrapper
-    jp IdleLoop                 ; End of subroutine
+    jp EndOfCommand             ; End of subroutine
 
 StopBGM:
     ld a, (RAM_Status)          ; Hide BGM playback in Echo's status
@@ -271,7 +329,7 @@ ClearBGM:
     ld b, 4                     ; Reset all PSG channels
     ld de, RAM_PSGData+48+15
     ld hl, RAM_Locked+11
-.mutepsg:
+.killpsg:
     PollPCM
     
     ld (hl), $00                ; Reset BGM volume
@@ -282,22 +340,22 @@ ClearBGM:
     
     ld a, (hl)                  ; Mute PSG channel if it isn't locked
     or a
-    jr nz, .nopsgmute
+    jr nz, .nopsgkill
     xor a
     ld (de), a
     
-.nopsgmute:
+.nopsgkill:
     PollPCM
     
     dec e
     dec l
-    djnz .mutepsg
+    djnz .killpsg
 
 ;----------------------------------------------------------------------------
 
     ld b, 8                     ; Reset all FM channels
     ld de, RAM_BGMFMVol+7
-.resetfm:
+.killfm:
     PollPCM
     
     ld a, $7F                   ; Reset BGM volume
@@ -328,10 +386,10 @@ ClearBGM:
     inc b
 .nofmkill:
     dec l
-    djnz .resetfm
+    djnz .killfm
 
 ;----------------------------------------------------------------------------
-    
+
     ld hl, RAM_BGMFMPan         ; Reset panning status (for restoring)
     ld a, $C0
     ld b, 8
@@ -339,6 +397,9 @@ ClearBGM:
     ld (hl), a
     inc l
     djnz .initpanstat
+    
+    xor a                       ; Reset flags
+    ld (RAM_Flags), a
 
     ret                         ; End of subroutine
 
@@ -349,19 +410,11 @@ ClearBGM:
 
 LoopBGM:
     PollPCM
-
-    ex de, hl                   ; Get looping address
-    inc l
-    ld c, (hl)
-    inc l
-    ld e, (hl)
-    inc l
-    ld d, (hl)
-    dec l
-    dec l
-    dec l
-    ex de, hl
-
+    
+    ld hl, (RAM_BGMLoopPoint+1) ; Get looping address
+    ld a, (RAM_BGMLoopPoint)
+    ld c, a
+    
     jp ProcessBGMRun            ; End of subroutine
 
 ;****************************************************************************
@@ -371,17 +424,9 @@ LoopBGM:
 
 SetLoopBGM:
     PollPCM
-
-    ex de, hl
-    inc l                       ; Store loop point address
-    ld (hl), c
-    inc l
-    ld (hl), e
-    inc l
-    ld (hl), d
-    dec l
-    dec l
-    dec l
-    ex de, hl
-
+    
+    ld a, c                     ; Store loop point address
+    ld (RAM_BGMLoopPoint), a
+    ld (RAM_BGMLoopPoint+1), hl
+    
     jp ProcessBGMRun            ; End of subroutine

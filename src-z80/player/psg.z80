@@ -10,8 +10,10 @@ UpdatePSG:
     push bc
 
     ld a, (hl)                  ; Get channel volume
-    bit 7, a
-    jr nz, .noskip
+;    bit 7, a
+;    jr nz, .noskip
+    or a
+    jp m, .noskip
     ld b, $0F
     inc l
     jp .skip

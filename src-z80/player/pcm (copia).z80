@@ -12,10 +12,6 @@ UpdatePCM:
 .doagain:
     ld (ix+0), $27              ; Acknowledge timer
     ld (ix+1), $1F
-    ;push hl
-    ;ld hl, $1F27
-    ;ld ($4000), hl
-    ;pop hl
 
     ld a, (hl)                  ; Fetch next sample
     inc a                       ; Check if it's the end of the waveform
@@ -31,7 +27,6 @@ UpdatePCM:
     ret                         ; End of subroutine
 
 .stop:
-;    ld b, $00                   ; Stop playback
     ld a, $C9                   ; Stop playback
     ld (UpdatePCM), a
     ld (ix+0), $2A              ; Turn off DAC
@@ -52,75 +47,34 @@ UpdatePCM:
 .noswitchu:
     
     ld hl, RAM_PCMBuffer        ; Load samples into the buffer
+    ld a, c
+    ex de, hl
     
-    ld a, (de)                  ; Samples 1~4
-    ld (hl), a
-    inc l
-    inc e
-    ld a, (de)
-    ld (hl), a
-    inc l
-    inc e
-    ld a, (de)
-    ld (hl), a
-    inc l
-    inc e
-    ld a, (de)
-    ld (hl), a
-    inc l
-    inc e
+    ldi
+    ldi
+    ldi
+    ldi
     
-    ld a, (de)                  ; Samples 5~8
-    ld (hl), a
-    inc l
-    inc e
-    ld a, (de)
-    ld (hl), a
-    inc l
-    inc e
-    ld a, (de)
-    ld (hl), a
-    inc l
-    inc e
-    ld a, (de)
-    ld (hl), a
-    inc l
-    inc e
+    ldi
+    ldi
+    ldi
+    ldi
     
-    ld a, (de)                  ; Samples 9~12
-    ld (hl), a
-    inc l
-    inc e
-    ld a, (de)
-    ld (hl), a
-    inc l
-    inc e
-    ld a, (de)
-    ld (hl), a
-    inc l
-    inc e
-    ld a, (de)
-    ld (hl), a
-    inc l
-    inc e
+    ldi
+    ldi
+    ldi
+    ldi
     
-    ld a, (de)                  ; Samples 13~16
-    ld (hl), a
-    inc l
-    inc e
-    ld a, (de)
-    ld (hl), a
-    inc l
-    inc e
-    ld a, (de)
-    ld (hl), a
-    inc l
-    inc e
-    ld a, (de)
-    ld (hl), a
-    inc l
-    inc e
+    ldi
+    ldi
+    ldi
+    ldi
     
+    ex de, hl
+    ld c, a
+    
+    ld a, e
+    or a
     jp nz, .nobankchg           ; Update high bytes of address if needed
     inc d
     jp nz, .nobankchg
@@ -262,21 +216,21 @@ LockChannelPCM:
 SetPCMRate:
     ld a, (RAM_ComBank)         ; Get new rate
     cpl
+    ld b, a
     
-    ld b, a                     ; Set high bits of timer
-    ld hl, $4000
-    ld (hl), $24
+    xor a                       ; Parsed command already
+    ld (RAM_Command), a
+    
+    ld a, b                     ; Set high bits of timer
+    ld (ix+0), $24
     rrca
     rrca
     or $C0
-    inc l
-    ld (hl), a
+    ld (ix+1), a
     
     ld a, b                     ; Set low bits of timer
-    dec l
-    ld (hl), $25
+    ld (ix+0), $25
     and $03
-    inc l
-    ld (hl), a
+    ld (ix+1), a
     
-    jp EndOfCommand             ; End of subroutine
+    jp IdleLoop                 ; End of subroutine

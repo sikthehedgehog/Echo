@@ -367,12 +367,27 @@ $F9rrnn: Set FM register in bank 1
 
 =============================================================================
 
-$FC: Go to loop [BGM ONLY]
-$FD: Set loop point [BGM ONLY]
+$FAnn: Set flags
 
-    This event are used in BGM streams to loop music. Put event $FD where the
+    This event will set some of the flags. The value nn is a bitmask that is
+    OR'd with the current flags.
+
+$FBnn: Clear flags
+
+    This event will clear some of the flags. The value nn is a bitmask that
+    is AND'd with the current flags.
+
+=============================================================================
+
+$FC: Go to loop
+$FD: Set loop point
+
+    This event are used in streams to loop music. Put event $FD where the
     loop starts, and then end the stream using event $FC (don't use event
     $FF). This will tell Echo to loop the song instead of stopping playback.
+    
+    SFX support for this event was added in 1.5, if you loop a sound effect
+    you'll have to either stop it manually or play another SFX.
 
 $FEnn: Delay ticks
 
