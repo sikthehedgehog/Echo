@@ -375,6 +375,16 @@ void echo_set_pcm_rate(uint8_t rate) {
 //***************************************************************************
 
 uint16_t echo_get_status(void) {
+   // Look-up tables used to work around the fact that playing/stopping
+   // won't set the status immediately (only when Echo processes the command)
+   // and this can catch programmers off guard
+   static const uint8_t and_flags[] = {
+      0xFF,0xFF, 0xFF,0xFE,0xFF,0xFD, 0xFF,0xFF,0xFF
+   };
+   static const uint8_t or_flags[] = {
+      0x00,0x00, 0x01,0x00,0x02,0x00, 0x00,0x00,0x00
+   };
+   
    // We need access to the Z80
    Z80_REQUEST();
    
@@ -385,6 +395,15 @@ uint16_t echo_get_status(void) {
       status |= ECHO_STAT_BUSY;
    if (z80_ram[0x1F00] != 0xFF)
       status |= ECHO_STAT_DIRBUSY;
+   
+   // Look ahead in the queue for any pending commands
+   // Adjust the flags accordingly if needed
+   uint8_t command = z80_ram[0x1FFF];
+   status &= and_flags[command];
+   status |= or_flags[command];
+   command = z80_ram[0x1FFB];
+   status &= and_flags[command];
+   status |= or_flags[command];
    
    // Done with the Z80
    Z80_RELEASE();

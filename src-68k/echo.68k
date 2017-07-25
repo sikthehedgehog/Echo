@@ -161,10 +161,6 @@ Echo_PlaySFX:
     bsr     Echo_SendCommandAddr    ; Send command to Echo
     move.w  (sp)+, d0               ; Restore register
     
-    Echo_Z80Request                 ; We need Z80 RAM access...
-    ori.b   #$01, ($A01FF0)         ; Force SFX flag to be on
-    Echo_Z80Release                 ; OK done with it for real
-    
     rts                             ; End of subroutine
 
 ;****************************************************************************
@@ -177,10 +173,6 @@ Echo_StopSFX:
     move.b  #$03, d0                ; Command $03 = stop SFX
     bsr     Echo_SendCommand        ; Send command to Echo
     move.w  (sp)+, d0               ; Restore register
-    
-    Echo_Z80Request                 ; We need Z80 RAM access...
-    andi.b  #$FE, ($A01FF0)         ; Force SFX flag to be off
-    Echo_Z80Release                 ; OK done with it for real
     
     rts                             ; End of subroutine
 
@@ -197,10 +189,6 @@ Echo_PlayBGM:
     bsr     Echo_SendCommandAddr    ; Send command to Echo
     move.w  (sp)+, d0               ; Restore register
     
-    Echo_Z80Request                 ; We need Z80 RAM access...
-    ori.b   #$02, ($A01FF0)         ; Force BGM flag to be on
-    Echo_Z80Release                 ; OK done with it for real
-    
     rts                             ; End of subroutine
 
 ;****************************************************************************
@@ -213,10 +201,6 @@ Echo_StopBGM:
     move.b  #$05, d0                ; Command $05 = stop BGM
     bsr     Echo_SendCommand        ; Send command to Echo
     move.w  (sp)+, d0               ; Restore register
-    
-    Echo_Z80Request                 ; We need Z80 RAM access...
-    andi.b  #$FD, ($A01FF0)         ; Force BGM flag to be off
-    Echo_Z80Release                 ; OK done with it for real
     
     rts                             ; End of subroutine
 
@@ -403,7 +387,9 @@ Echo_SetVolumeEx:
 ;****************************************************************************
 
 Echo_GetStatus:
-    moveq   #0, d0
+    movem.l d1/a1, -(sp)            ; Save registers
+
+    clr.w   d0                      ; Set all needed bits to 0
     Echo_Z80Request                 ; We need the Z80 bus
     move.b  ($A01FF0), d0           ; Get the status flags
 
@@ -417,8 +403,39 @@ Echo_GetStatus:
     bset.l  #14, d0                 ; If so, set the relevant flag
 @DirectEmpty:
 
+    moveq   #0, d1                  ; Clear unused bits from index
+    lea     @AndTable(pc), a1       ; Get pointer to look-up tables
+    
+    move.b  ($A01FFF), d1           ; Get next pending command (if any)
+    beq.s   @QueueChecked           ; No commands left to process?
+    move.b  (a1,d1.w), d1           ; Get mask of flags to leave
+    and.b   d1, d0                  ; Remove flags that should be clear
+    move.b  @OrTable-@AndTable(a1,d1.w), d1 ; Get mask of flags to set
+    or.b    d1, d0                  ; Insert flags that should be set
+
+    move.b  ($A01FFB), d1           ; Repeat that with 2nd pending command
+    beq.s   @QueueChecked
+    move.b  (a1,d1.w), d1
+    and.b   d1, d0
+    move.b  @OrTable-@AndTable(a1,d1.w), d1
+    or.b    d1, d0
+
+@QueueChecked:
     Echo_Z80Release                 ; Let the Z80 go!
+    movem.l (sp)+, d1/a1            ; Restore registers
     rts                             ; End of subroutine
+
+;----------------------------------------------------------------------------
+; Look-up tables used to readjust the status flags based on pending commands
+; that haven't been processed yet (normally they wouldn't be updated yet, but
+; this can catch programmers off guard so we cheat it).
+;
+; Every byte represents a possible command.
+;----------------------------------------------------------------------------
+
+@AndTable:  dc.b $FF,$FF, $FF,$FE,$FF,$FD, $FF,$FF,$FF
+@OrTable:   dc.b $00,$00, $01,$00,$02,$00, $00,$00,$00
+            even
 
 ;****************************************************************************
 ; Echo_GetFlags
