@@ -155,7 +155,7 @@ void echo_send_command_addr(uint8_t cmd, const void *addr) {
    Z80_REQUEST();
    
    // Is Echo busy yet?
-   volatile uint8_t *ptr = &z80_ram[0x1FFC]
+   volatile uint8_t *ptr = &z80_ram[0x1FFC];
    if (ptr[3] != 0x00) {
       ptr -= 4;
       while (ptr[3] != 0x00) {
@@ -191,7 +191,7 @@ void echo_send_command_byte(uint8_t cmd, uint8_t byte) {
    Z80_REQUEST();
    
    // Is Echo busy yet?
-   volatile uint8_t *ptr = &z80_ram[0x1FFC]
+   volatile uint8_t *ptr = &z80_ram[0x1FFC];
    if (ptr[3] != 0x00) {
       ptr -= 4;
       while (ptr[3] != 0x00) {
