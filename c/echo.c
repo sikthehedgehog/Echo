@@ -120,7 +120,7 @@ void echo_send_command(uint8_t cmd) {
    Z80_REQUEST();
    
    // Is Echo busy yet?
-   volatile uint8_t *ptr = &z80_ram[0x1FFC]
+   volatile uint8_t *ptr = &z80_ram[0x1FFC];
    if (ptr[3] != 0x00) {
       ptr -= 4;
       while (ptr[3] != 0x00) {
@@ -423,7 +423,7 @@ uint8_t echo_get_flags(void)
 {
    Z80_REQUEST();
    uint8_t flags = z80_ram[0x1FF2];
-   Z88_RELEASE();
+   Z80_RELEASE();
    return flags;
 }
 
