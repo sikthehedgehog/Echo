@@ -22,7 +22,7 @@ change the blob, just use the included blob2c tool. It's invoked as follows:
 
 *** Initialization ***
 
-void echo_init(const void **list)
+void echo_init(const void* const* list)
 
    Initializes Echo. Loads the instrument list, loads the Z80 engine and gets
    it running. You need to call this before you can use Echo (usually when

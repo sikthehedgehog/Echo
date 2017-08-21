@@ -24,7 +24,7 @@ enum {
 #define ECHO_STAT_BUSY     0x8000   /* Echo still didn't parse command */
 
 /* Function prototypes */
-void echo_init(const void **list);
+void echo_init(const void* const* list);
 void echo_play_bgm(const void *esf);
 void echo_stop_bgm(void);
 void echo_pause_bgm(void);

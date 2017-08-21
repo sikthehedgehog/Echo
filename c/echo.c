@@ -53,7 +53,7 @@ static const uint8_t psg_volumes[] = {
 // param list: pointer to instrument list
 //***************************************************************************
 
-void echo_init(const void **list) {
+void echo_init(const void* const* list) {
    // Take over the Z80
    Z80_RESET();
    Z80_REQUEST();
