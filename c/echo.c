@@ -25,7 +25,7 @@ static volatile uint16_t* const z80_reset  = (uint16_t *) 0xA11200;
    { volatile int16_t i; for (i = 0xFF; i >= 0; i--); }
 
 // Look-up tables for echo_set_volume
-static const uint8_t fm_volumes[] = {
+const uint8_t echo_fm_vol_table[0x40] = {
    0x7F,0x7B,0x77,0x73,0x70,0x6C,0x68,0x65,
    0x61,0x5E,0x5A,0x57,0x54,0x50,0x4D,0x4A,
    0x47,0x44,0x41,0x3F,0x3C,0x39,0x36,0x34,
@@ -35,7 +35,7 @@ static const uint8_t fm_volumes[] = {
    0x08,0x07,0x06,0x05,0x04,0x04,0x03,0x02,
    0x02,0x01,0x01,0x01,0x00,0x00,0x00,0x00
 };
-static const uint8_t psg_volumes[] = {
+const uint8_t echo_psg_vol_table[0x40] = {
    0x0F,0x0F,0x0E,0x0E,0x0D,0x0D,0x0C,0x0C,
    0x0B,0x0B,0x0B,0x0A,0x0A,0x0A,0x09,0x09,
    0x08,0x08,0x08,0x07,0x07,0x07,0x06,0x06,
@@ -306,7 +306,7 @@ void echo_set_volume(uint8_t vol) {
    Z80_REQUEST();
    
    // Set FM volume values
-   uint8_t fm_vol = fm_volumes[vol >> 2];
+   uint8_t fm_vol = echo_fm_vol_table[vol >> 2];
    z80_ram[0x1FE0] = fm_vol;
    z80_ram[0x1FE1] = fm_vol;
    z80_ram[0x1FE2] = fm_vol;
@@ -317,7 +317,7 @@ void echo_set_volume(uint8_t vol) {
    z80_ram[0x1FE7] = fm_vol;
    
    // Set PSG volume values
-   uint8_t psg_vol = psg_volumes[vol >> 2];
+   uint8_t psg_vol = echo_psg_vol_table[vol >> 2];
    z80_ram[0x1FE8] = psg_vol;
    z80_ram[0x1FE9] = psg_vol;
    z80_ram[0x1FEA] = psg_vol;
@@ -365,6 +365,17 @@ void echo_set_volume_ex(const uint8_t *ptr) {
 
 void echo_set_pcm_rate(uint8_t rate) {
    echo_send_command_byte(ECHO_CMD_SETPCMRATE, rate);
+}
+
+//***************************************************************************
+// echo_set_stereo
+// Toggles stereo or mono.
+//---------------------------------------------------------------------------
+// param enable: non-zero for stereo, zero for mono
+//***************************************************************************
+
+void echo_set_stereo(int enable) {
+   echo_send_command_byte(ECHO_CMD_SETSTEREO, !!enable);
 }
 
 //***************************************************************************

@@ -9,7 +9,7 @@ RAM_PSGData:        ds 4*16         ; PSG envelope data
                                       ; ds 3 ... Current address
                                       ; ds 3 ... Looping address
                                       ; ds 3 ... Start address
-                                      ; ds 1 ... Padding
+                                      ; ds 1 ... Semitone ($FF if void)
                                       ; ds 3 ... BGM instrument address
                                       ; ds 1 ... BGM channel volume
 
@@ -45,6 +45,7 @@ RAM_SFXAddress:     ds 2              ; Current SFX address
 RAM_SFXLoopPoint:   ds 3              ; SFX loop point
 
 RAM_Paused:         ds 1            ; Set if BGM stream is paused
+RAM_Mono:           ds 1            ; Set if panning is disabled
 
 RAM_PCMBank1:       db 1            ; (not implemented yet)
 RAM_PCMAddr1:       dw 1            ; (not implemented yet)

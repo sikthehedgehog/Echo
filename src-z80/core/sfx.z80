@@ -281,6 +281,8 @@ ClearSFX:
     PollPCM
     
     dec b                         ; Restore FM channel
+    ld a, b
+    call KillFM
     call RestoreFM
     inc b
     

@@ -220,12 +220,19 @@ ESF_SetFMReg macro
 
 ESF_Delay macro
     if      (\1)>0
-    if      (\1)<=$10
-    dc.b    $D0-1+(\1)
-    else
-    dc.b    $FE
-    dc.b    (\1)&$FF
-    endc
+      if      (\1)>=$100
+        rept    (\1)/$100
+          dc.b    $FE, $00
+        endr
+      endc
+      if      (\1)%$100
+        if      ((\1)%$100)<=$10
+          dc.b    $D0-1+((\1)%$100)
+        else
+          dc.b    $FE
+          dc.b    (\1)%$100
+        endc
+      endc
     endc
     endm
 

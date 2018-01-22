@@ -7,13 +7,25 @@ OVERVIEW
 
 FORMAT
 
-    EEF instruments consist of a list of volume levels. Each byte represents
-    a different volume level, and the value ranges from $00 (loudest) to $0F
-    (quietest). Each byte represents one tick (i.e. 1/60th of a second).
+    EEF instruments consist of a byte per tick (1/60th of a second). The
+    bottom nibble is the volume level (relative to the note's volume),
+    ranging from $x0 (loudest) to $xF (quietest).
+    
+    The upper nibble is a "semitone shift", which is added to the current
+    note's semitone. These can be useful for things like vibrato (e.g. for
+    whistles) and such. The amount the semitone is shifted is as follows:
+    
+        $0x ... 0 | $1x ... +1  | $8x ... -1
+                  | $2x ... +2  | $9x ... -2
+                  | $3x ... +3  | $Ax ... -3
+                  | $4x ... +4  | $Bx ... -4
+                  | $5x ... +6  | $Cx ... -6
+                  | $6x ... +8  | $Dx ... -8
+                  | $7x ... +12 | $Ex ... -12
     
     Looping is possible. The start of the loop is marked by a byte with value
     $FE, while the end of the loop is marked by a byte with value $FF. There
-    must be at least one volume byte between them or Echo will hang.
+    must be at least one tick byte between them or Echo will hang.
     
     To make a non-looping PSG instrument, just put the last volume value
     inside the loop.
@@ -22,14 +34,14 @@ FORMAT
 
 NOTES
 
-    Yes, this format was kind of an afterthought. Later I may improve it to
-    provide at least some kind of RLE-like compression, but for now you'll
-    have to stick with this :P
-    
-    Also, since PSG instruments are required to use PSG channels and I know
-    many of you don't want to mess with them at all, here's a flat PSG
-    instrument (i.e. no envelope):
+    Since PSG instruments are required to use PSG channels and I know many of
+    you don't want to mess with them at all, here's a flat PSG instrument
+    (i.e. no envelope):
     
         $FE,$00,$FF
+    
+    There's a flavor of the Set Frequency event that doesn't play nice with
+    semitone shifting (in which case it'll just act as if it was always $0x).
+    It will work again once a new note starts or the other flavor is used.
 
 =============================================================================

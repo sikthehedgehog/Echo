@@ -8,10 +8,10 @@ UpdatePSG:
     ld b, 3                     ; Go through all channels
 .loop:
     push bc
+    xor a
+    ld iyl, a
 
     ld a, (hl)                  ; Get channel volume
-;    bit 7, a
-;    jr nz, .noskip
     or a
     jp m, .noskip
     ld b, $0F
@@ -74,7 +74,7 @@ UpdatePSG:
 
 .skip:
     PollPCM
-
+    
     ld a, b                     ; Set PSG channel volume
     rlca   
     rlca
@@ -86,6 +86,63 @@ UpdatePSG:
     rrca
     or $90
     ld ($7F11), a
+    
+    PollPCM
+    push bc
+    
+    ld a, l                     ; Get current semitone
+    add 11-1
+    ld l, a
+    ld b, (hl)
+    sub 11-1
+    ld l, a
+    
+    ld a, b                     ; Oh, don't tocuh it?
+    inc a
+    jr z, .notone
+    
+    PollPCM
+    
+    db $FD,$7D ; ld a, iyl      ; Get semitone shift
+    and $F0
+    rrca
+    rrca
+    rrca
+    rrca
+    ex de, hl
+    ld h, PSGShiftTable>>8
+    add PSGShiftTable&$FF
+    ld l, a
+    ld c, (hl)
+    ex de, hl
+    
+    PollPCM
+    
+    ld a, b                     ; Compute resulting semitone
+    add c
+    
+    ex de, hl                   ; Get corresponding frequency
+    ld h, PSGFreqTable>>8
+    ld l, a
+    ld c, (hl)
+    inc l
+    ld b, (hl)
+    
+    PollPCM
+    
+    ld a, e                     ; Get PSG channel
+    and $30
+    add a
+    or c
+    
+    ld hl, $7F11                ; Set new frequency
+    ld (hl), a
+    ld (hl), b
+    ex de, hl
+    
+    PollPCM
+.notone:
+    pop bc
 
     ld a, l                     ; Go for next channel
     sub 16+1
@@ -200,31 +257,22 @@ NoteOnPSG:
     ld a, (de)
     ld (hl), a
 
+    ld a, e
     pop de
     pop hl
 
+    ex af, af'
     PollPCM
     call GetParam               ; Get note
     PollPCM
-
-    ;pop af
     ex af, af'
-    push hl
-    push de
-    ld h, PSGFreqTable>>8       ; Get address of frequency data
-    ld l, b
-    ld de, $7F11
 
-    rrca                        ; Set new frequency
-    rrca
-    rrca
-    ld b, (hl)
-    or b
-    ld (de), a
-    inc l
-    ld a, (hl)
-    ld (de), a
-    pop de
+SetSemitonePSG:
+    push hl                     ; Store new semitone
+    inc a
+    ld h, RAM_PSGData>>8
+    ld l, a
+    ld (hl), b
     pop hl
 
     ret                         ; End of subroutine
@@ -335,6 +383,14 @@ NoteOffPSG:
     ld l, a
     ld a, (hl)
     and $7F
+    ld (hl), a
+    
+    PollPCM
+    
+    ld a, l                     ; Don't waste time with semitone shifting
+    add 11
+    ld l, a
+    ld a, $FF
     ld (hl), a
     pop hl
 
@@ -595,6 +651,27 @@ SetNotePSG:
     PollPCM
     call GetParam               ; Get first byte
     PollPCM
+
+    ld a, b                     ; Select by semitone?
+    add a, a
+    jp c, .freqtone
+    ex af, af'
+
+    push hl                     ; Mark semitone as not valid
+    ld l, a
+    ex af, af'
+    PollPCM
+    ld a, l
+    rrca
+    rrca
+    rrca
+    rrca
+    add a, 11
+    ld l, a
+    ld h, RAM_PSGData>>8
+    ld (hl), $FF
+    pop hl
+    PollPCM
     ex af, af'
 
     push de                     ; PSG port address
@@ -617,6 +694,19 @@ SetNotePSG:
     pop de
 
     ret                         ; End of subroutine
+
+;----------------------------------------------------------------------------
+
+.freqtone:
+    ld b, a
+    PollPCM
+    ex af, af'
+    rrca
+    rrca
+    rrca
+    rrca
+    add 10
+    jp SetSemitonePSG
 
 ;****************************************************************************
 ; SetNoteNoise*

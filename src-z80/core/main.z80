@@ -20,6 +20,11 @@ EntryPoint:
     ld (RAM_PSGData+16), a
     ld (RAM_PSGData+32), a
     ld (RAM_PSGData+48), a
+    dec a
+    ld (RAM_PSGData+11), a
+    ld (RAM_PSGData+11+16), a
+    ld (RAM_PSGData+11+32), a
+    ld (RAM_PSGData+11+48), a
 
     ld hl, $6000                ; Set default bank
     ld (hl), l
@@ -114,6 +119,8 @@ RunCommand:
     jp z, SetPCMRate
     dec a                       ; Command $08: pause BGM
     jp z, PauseBGM
+    dec a                       ; Command $09: set stereo
+    jp z, SetStereo
 
     PollPCM
 
@@ -207,17 +214,11 @@ DoTick_PSGSkip:
 ;****************************************************************************
 ; LoadList [command $01]
 ; Loads the pointer list
+;----------------------------------------------------------------------------
+; notes: doesn't return
 ;****************************************************************************
 
 LoadList:
-;    ld hl, RAM_ComBank          ; Get command parameters
-;    ld c, (hl)
-;    inc l
-;    ld e, (hl)
-;    inc l
-;    ld d, (hl)
-;    ex de, hl
-    
     ld hl, (RAM_ComAddr)        ; Get command parameters
     ld a, (RAM_ComBank)
     ld c, a

@@ -217,34 +217,56 @@ $2Bnn: Set volume PSG channel #4
 
 =============================================================================
 
-$30nnnn: Set frequency FM channel #1
-$31nnnn: Set frequency FM channel #2
-$32nnnn: Set frequency FM channel #3
-$34nnnn: Set frequency FM channel #4
-$35nnnn: Set frequency FM channel #5
-$36nnnn: Set frequency FM channel #6
+$30nn/$30nnnn: Set frequency FM channel #1
+$31nn/$31nnnn: Set frequency FM channel #2
+$32nn/$32nnnn: Set frequency FM channel #3
+$34nn/$34nnnn: Set frequency FM channel #4
+$35nn/$35nnnn: Set frequency FM channel #5
+$36nn/$36nnnn: Set frequency FM channel #6
 
     These events set the raw frequency of a specific FM channel, without
-    triggering a new note. Meant for note slides. The following two bytes
-    specify the new frequency in the same format as the YM2612 expects. The
-    first byte is register +$A4, the second byte is register +$A0.
-    
+    triggering a new note. Meant for note slides. The format of this event
+    depends on whether the second byte has its MSB set or not.
+
+    If the 2nd byte's MSB is set, the event is two bytes long. The 2nd byte
+    is the semitone in this format (where "octave" is from 0 to 7 and
+    "semitone" is from 0 to 11):
+
+        octave * 16 + semitone + 128
+
+    If the 2nd byte's MSB is clear, the event is three bytes long. The 2nd
+    and 3rd bytes specify the new frequency in the same format as the YM2612
+    expects. The 2nd byte is register $A4+, the 3rd byte is register $A0+.
+
     Echo uses the following frequency values for each semitone:
-    
+
         C  - 644 | E  - 810 | G# - 1021
         C# - 681 | F  - 858 | A  - 1081
         D  - 722 | F# - 910 | A# - 1146
         D# - 765 | G  - 964 | B  - 1214
 
-$38nnnn: Set frequency PSG channel #1
-$39nnnn: Set frequency PSG channel #2
-$3Annnn: Set frequency PSG channel #3
+$38nn/$38nnnn: Set frequency PSG channel #1
+$39nn/$39nnnn: Set frequency PSG channel #2
+$3Ann/$3Annnn: Set frequency PSG channel #3
 
     These events set the raw frequency of a specific square wave PSG channel,
-    without triggering a new note. Meant for note slides. The following two
-    bytes specify the new frequency, the first byte containing the four least
-    significant bits (LSB aligned), and the next byte containing the six most
-    significant bits (LSB aligned too).
+    without triggering a new note. Meant for note slides. The format of this
+    event depends on whether the second byte has its MSB set or not.
+
+    If the 2nd byte's MSB is set, the event is two bytes long. The 2nd byte
+    is the semitone in this format (where "octave" is from 0 to 5 and
+    "semitone" is from 0 to 11):
+
+        octave * 12 + semitone + 128
+
+    If the 2nd byte's MSB is clear, the event is three bytes long. The 2nd
+    and 3rd bytes specify the new frequency, the 2nd byte containing the
+    four least significant bits (LSB aligned), and the 3rd byte containing
+    the six most significant bits (LSB aligned too).
+
+    IMPORTANT: using the 3-byte event prevents semitone shifting in PSG
+    instruments from working. It will start working again whenever a new note
+    or the 2-byte version of this event is used.
 
     Echo uses the following frequency values for each semitone:
     

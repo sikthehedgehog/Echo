@@ -132,7 +132,9 @@ Echo_SetVolumeEx
    Sets the global volume for each channel separately. Register a0 points to
    a list of 16 bytes (one for each Echo channel). Values for FM and PSG
    channels are given in the same way as in events, that is: logarithmic
-   scale, 0..127 for FM, 0..15 for PSG, lower = louder.
+   scale, 0..127 for FM, 0..15 for PSG, lower = louder. You can use the
+   look-up tables described below (Echo_FMVolTable and Echo_PSGVolTable) to
+   convert from linear to .
    
    The last byte (the one belonging to the PCM channel) is used to toggle
    whether PCM plays, either 0 (disabled) or 1 (enabled).
@@ -140,6 +142,17 @@ Echo_SetVolumeEx
    NOTE: the Echo 1.4 docs requested for 13 bytes instead of 16. This has
    been changed for the sake of expansion. Currently the extra bytes are
    ignored, but consider adapting your code (just set them to zero).
+
+Echo_FMVolTable
+Echo_PSGVolTable
+    These two are not subroutines but rather look-up tables. They have 64
+    byte-sized entries and they're used to convert a linear volume value into
+    a hardware volume value (e.g. for Echo_SetVolumeEx).
+    
+    To give an idea of how to use these: take what you'd pass in d0 to
+    Echo_SetVolume divided by 4 (shift right by 2), then use it as an offset
+    to these tables. The byte will be the volume as the hardware (or
+    Echo_SetVolumeEx) wants it.
 
 =============================================================================
 
@@ -166,6 +179,15 @@ Echo_SetPCMRate
    space and, more importantly, reduces CPU time available for other things
    (which can hamper Echo's ability to process complex streams). Be careful
    if you increase the sample rate.
+
+Echo_SetStereo
+   in d0 = $00 to use mono, otherwise to use stereo
+   
+   Toggles whether sound is forced to mono (d0 == $00) or if stereo panning
+   works (d0 != $00). Will take effect for all following panning events. Can
+   be used to implement a mono/stereo toggle in games.
+   
+   By default Echo is in stereo mode.
 
 =============================================================================
 

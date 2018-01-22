@@ -15,6 +15,7 @@ enum {
    ECHO_CMD_RESUMEBGM,     /* 0x06 - Resume BGM playback */
    ECHO_CMD_SETPCMRATE,    /* 0x07 - Set PCM rate */
    ECHO_CMD_PAUSEBGM,      /* 0x08 - Pause BGM playback */
+   ECHO_CMD_SETSTEREO,     /* 0x09 - Toggle stereo */
 };
 
 /* Echo status flags */
@@ -46,5 +47,9 @@ void echo_send_command_byte(uint8_t cmd, uint8_t byte);
 /* Deprecated functions */
 static void (* const echo_send_command_ex)(uint8_t, const void *) =
    echo_send_command_addr;
+
+/* Look-up tables */
+extern const uint8_t echo_fm_vol_table[0x40];
+extern const uint8_t echo_psg_vol_table[0x40];
 
 #endif

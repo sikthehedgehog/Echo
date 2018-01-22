@@ -49,8 +49,9 @@ NoteOnFM:
     PollPCM
     call GetParam               ; Get note
     PollPCM
-
     ex af, af'
+
+SetFMSemitone:
     push de
     push hl
 
@@ -175,8 +176,8 @@ SetNoteFMBGM:
     jp ProcessBGMRun            ; End of subroutine
 
 SetNoteFM:
-    push af
     ld b, a
+    ex af, af'
     PollPCM
 
     ld a, b                     ; Determine which port to write
@@ -188,7 +189,11 @@ SetNoteFM:
     call GetParam               ; Get high byte
     PollPCM
 
-    pop af
+    ld a, b                     ; Is it a semitone?
+    add a, a
+    jp c, .freqtone
+
+    ex af, af'
     push de
 
     and $07
@@ -216,6 +221,14 @@ SetNoteFM:
     PollPCM
     pop de
     ret                         ; End of subroutine
+
+;----------------------------------------------------------------------------
+
+.freqtone:
+    inc a
+    ld b, a
+    ex af, af'
+    jp SetFMSemitone
 
 ;****************************************************************************
 ; LoadFM* [events $40~$47]
@@ -678,6 +691,16 @@ SetFMParamSFX:
     PollPCM
     call GetParam               ; Get parameters
     PollPCM
+    
+    ld a, (RAM_Mono)            ; Is stereo disabled? (always turn on both
+    or a                          ; speakers in that case)
+    jr z, .sfxpanok
+    ld a, b
+    or $C0
+    ld b, a
+    PollPCM
+.sfxpanok:
+    
     ex af, af'
 
     and $03                     ; Get channel ID
@@ -701,6 +724,16 @@ SetFMParamBGM:
     PollPCM
     call GetParam               ; Get parameters
     PollPCM
+    
+    ld a, (RAM_Mono)            ; Is stereo disabled? (always turn on both
+    or a                          ; speakers in that case)
+    jr z, .bgmpanok
+    ld a, b
+    or $C0
+    ld b, a
+    PollPCM
+.bgmpanok:
+
     ex af, af'
     
     push hl
@@ -880,6 +913,14 @@ KillFM:
     dec c
     jp nz, .loaddummy
     
+    ld e, 0                     ; Make the pitch so low it's unherable
+    add 4                       ; because the above is STILL not enough
+    ld (iy+0), a                ; sometimes. If you ever notice a very low
+    ld (iy+1), e                ; pitch waveform... this is why
+    sub 4
+    ld (iy+0), a
+    ld (iy+1), e
+    
     pop hl
     pop de
     PollPCM
@@ -941,3 +982,16 @@ RestoreFM:
 
     PollPCM
     ret                         ; End of subroutine
+
+;****************************************************************************
+; SetStereo [command $09]
+; Toggles whether stereo is enabled or not.
+;----------------------------------------------------------------------------
+; notes: doesn't return
+;****************************************************************************
+
+SetStereo:
+    ld a, (RAM_ComBank)         ; Just copy the argument as-is
+    ld (RAM_Mono), a
+    
+    jp EndOfCommand             ; End of subroutine

@@ -138,6 +138,17 @@ void echo_set_volume_ex(const uint8_t *ptr)
    been changed for the sake of expansion. Currently the extra bytes are
    ignored, but consider adapting your code (just set them to zero).
 
+const uint8_t echo_fm_vol_table[]
+const uint8_t echo_psg_vol_table[]
+    These two are not subroutines but rather look-up tables. They have 64
+    byte-sized entries and they're used to convert a linear volume value into
+    a hardware volume value (e.g. for echo_set_volume_ex).
+    
+    To give an idea of how to use these: take what you'd pass as argument to
+    echo_set_volume divided by 4 (shift right by 2), then use it as an index
+    to these arrays. The byte will be the volume as the hardware (or
+    echo_set_volume_ex) wants it.
+
 =============================================================================
 
 *** Settings ***
@@ -162,6 +173,14 @@ void echo_set_pcm_rate(uint8_t rate)
    space and, more importantly, reduces CPU time available for other things
    (which can hamper Echo's ability to process complex streams). Be careful
    if you increase the sample rate.
+
+void echo_set_stereo(int enable)
+
+   Toggles whether sound is forced to mono (enable == 0) or if stereo panning
+   works (enable != 0). Will take effect for all following panning events.
+   Can be used to implement a mono/stereo toggle in games.
+   
+   By default Echo is in stereo mode.
 
 =============================================================================
 
