@@ -62,6 +62,7 @@ void echo_init(const void* const* list) {
    // would tell it to load the instrument list, but we can't do that here
    // due to linker shenanigans)
    z80_ram[0x1FFF] = 0x00;
+   z80_ram[0x1FFB] = 0x00;
    
    // Direct stream is empty yet
    z80_ram[0x1F00] = 0xFF;
