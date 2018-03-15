@@ -123,7 +123,7 @@ Echo_SendCommandEx:
 ;****************************************************************************
 
 Echo_SendCommandByte:
-    movem.l d1-2/a1, -(sp)          ; Save registers
+    movem.l d1-d2/a1, -(sp)         ; Save registers
     Echo_Z80Request                 ; We need the Z80 bus
 
     lea     ($A01FFF), a1           ; First try the 1st slot
