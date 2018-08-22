@@ -38,7 +38,7 @@ EntryPoint:
     ld (hl), l
 
     ld ix, $4000                ; YM2612 I/O ports base address
-    ld iyh, $40
+    ld iy, $4000
 
     exx                         ; Init PCM playback status
     ld b, $00                   ; Not playing
