@@ -332,7 +332,9 @@ ClearBGM:
 .killpsg:
     PollPCM
     
-    ld (hl), $00                ; Reset BGM volume
+    ld a, $0F
+    ld (de), a                  ; Reset BGM volume
+    ;ld (hl), 0
     
     ld a, e
     sub 15

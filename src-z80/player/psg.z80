@@ -564,6 +564,7 @@ LoadPSGBGM:
 
     PollPCM
     
+    xor a
     ld (hl), a                  ; Reset volume for BGM
     dec l
 

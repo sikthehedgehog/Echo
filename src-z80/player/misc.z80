@@ -119,7 +119,8 @@ RefreshVolume:
 .fixfmvolok:
     ld b, a
     ld a, l
-    call SetFMVolLoad
+    and $07
+    call SetFMVolTempLoad
     inc l
     inc e
     dec c
