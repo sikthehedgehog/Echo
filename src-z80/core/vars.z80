@@ -14,7 +14,7 @@ RAM_PSGData:        ds 4*16         ; PSG envelope data
                                       ; ds 1 ... BGM channel volume
 
 RAM_BGMFMInstr:     ds 8            ; FM instruments used by BGM
-RAM_BGMFMVol:       ds 8            ; FM volumes used by BGM
+RAM_BGMFMVol:       ds 8, $7F       ; FM volumes used by BGM
 RAM_BGMFMPan:       ds 8, $C0       ; FM panning used by BGM
 
 RAM_FMVol:          ds 8            ; FM volume of each channel

@@ -45,6 +45,14 @@ PlayBGM:
     ld hl, ProcessBGM           ; Tell Echo to process BGM
     ld (DoTick_BGM+1), hl
     
+    ld b, 8                     ; Force BGM volume of all FM channels to $00
+    ld c, 0                     ; (default value for older Echo versions)
+    ld hl, RAM_BGMFMVol
+.playunmute:
+    ld (hl), c
+    inc l
+    djnz .playunmute
+    
     jp EndOfCommand             ; End of subroutine
 
 ;****************************************************************************
@@ -311,7 +319,15 @@ StopBGM:
     ld (RAM_BGMPlaying), a
     ld hl, DoTick_BGMSkip
     ld (DoTick_BGM+1), hl
-
+    
+    ld b, 8                     ; Force BGM volume of all FM channels to $7F
+    ld c, $7F
+    ld hl, RAM_BGMFMVol
+.stopmute:
+    ld (hl), c
+    inc l
+    djnz .stopmute
+    
     ret                         ; End of subroutine
 
 ;****************************************************************************

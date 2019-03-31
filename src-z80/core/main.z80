@@ -178,6 +178,7 @@ DoTick:
 
     ld (ix+0), $27              ; Retrigger the timer
     ld (ix+1), $2F
+DoTick_Tick:
 
     PollPCM
     

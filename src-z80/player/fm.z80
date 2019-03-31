@@ -798,6 +798,9 @@ SetFMReg:
     
     PollPCM                     ; Get parameters
     call GetParam
+    ld a, b
+    cp $27
+    jr z, .setch3
     push bc
     PollPCM
     call GetParam
@@ -808,6 +811,43 @@ SetFMReg:
     ld (iy+0), b                ; Write register
     ld (iy+1), a
     
+    ret                         ; End of subroutine
+
+;----------------------------------------------------------------------------
+
+.setch3:
+    ; Register $27 is the timer triggers, but also holds ch3 mode
+    ; It's handled separately in order to only modify the ch3 mode bits
+    ; and modify the register writes to keep them
+    
+    PollPCM                     ; Get new ch3 mode
+    call GetParam
+    PollPCM
+    
+    ld a, b                     ; Set ch3 mode now, without touching
+    and $C0                     ; either timer
+    or $0F
+    ld b, a
+    ld a, $27
+    ld (iy+0), a
+    ld (iy+0), b
+    
+    PollPCM
+    
+    ld a, b                     ; Update timer writes (so they don't undo
+    and $C0                     ; the ch3 mode change)
+    
+    ld a, (UpdatePCM_Tick-1)    ; (timer A)
+    and $3F
+    or a, b
+    ld (UpdatePCM_Tick-1), a
+    
+    ld a, (DoTick_Tick-1)       ; (timer B)
+    and $3F
+    or a, b
+    ld (DoTick_Tick-1), a
+    
+    PollPCM
     ret                         ; End of subroutine
 
 ;****************************************************************************

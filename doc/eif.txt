@@ -12,7 +12,7 @@ FORMAT
     register. The registers are stored in the following order (assuming the
     first FM channel):
     
-        $B0                     -- Algorithm and feedback
+        $B4                     -- Algorithm and feedback
         $30, $34, $38, $3C      -- Multiplier and detune
         $40, $44, $48, $4C      -- Total level
         $50, $54, $58, $5C      -- Attack rate

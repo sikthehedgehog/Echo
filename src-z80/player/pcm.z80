@@ -9,9 +9,10 @@ UpdatePCM:
     
     exx                         ; Switch to PCM registers
 
-.doagain:
+UpdatePCM_Again:
     ld (ix+0), $27              ; Acknowledge timer
     ld (ix+1), $1F
+UpdatePCM_Tick:
     ;push hl
     ;ld hl, $1F27
     ;ld ($4000), hl
@@ -129,7 +130,7 @@ UpdatePCM:
 .nobankchg:
     
     ld l, RAM_PCMBuffer&$FF     ; Go back to the beginning of the buffer
-    jp .doagain                 ; We took so long we should play the next
+    jp UpdatePCM_Again          ; We took so long we should play the next
                                   ; sample already ._.'
 
 ;****************************************************************************
