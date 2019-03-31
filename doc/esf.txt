@@ -388,6 +388,12 @@ $F9rrnn: Set FM register in bank 1
         * It's possible to touch the global registers ($22~$2B in bank 0).
           Do it at your own risk. You may mess up with Echo's functionality,
           so be careful about it and make sure you know what you're doing.
+    
+    Since version 1.64, writes to register $27 are handled specially: only
+    bits 7-6 are passed as-is while bits 5-0 are left to Echo. This is
+    because this register selects ch3 mode but also has the bits that trigger
+    the timers. This way, streams can change ch3 mode without risking Echo
+    undoing the changes.
 
 =============================================================================
 
