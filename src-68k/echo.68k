@@ -416,6 +416,11 @@ Echo_GetStatus:
     bset.l  #14, d0                 ; If so, set the relevant flag
 @DirectEmpty:
 
+    cmpi.b  #$C9, ($A00008)         ; Check if ch6 is in FM or PCM mode
+    beq.s   @PcmOff                 ; PCM playback active? (i.e. not RET)
+    bset.l  #13, d0                 ; If so, set the relevant flag
+@PcmOff:
+
     moveq   #0, d1                  ; Clear unused bits from index
     lea     @AndTable(pc), a1       ; Get pointer to look-up tables
     

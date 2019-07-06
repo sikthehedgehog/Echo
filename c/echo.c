@@ -407,6 +407,8 @@ uint16_t echo_get_status(void) {
       status |= ECHO_STAT_BUSY;
    if (z80_ram[0x1F00] != 0xFF)
       status |= ECHO_STAT_DIRBUSY;
+   if (z80_ram[0x0008] != 0xC9)
+      status |= ECHO_STAT_PCM;
    
    // Look ahead in the queue for any pending commands
    // Adjust the flags accordingly if needed

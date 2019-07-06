@@ -21,6 +21,7 @@ enum {
 /* Echo status flags */
 #define ECHO_STAT_BGM      0x0002   /* Background music is playing */
 #define ECHO_STAT_SFX      0x0001   /* Sound effect is playing */
+#define ECHO_STAT_PCM      0x2000   /* PCM playback ongoing */
 #define ECHO_STAT_DIRBUSY  0x4000   /* Echo isn't done with direct events */
 #define ECHO_STAT_BUSY     0x8000   /* Echo still didn't parse command */
 
