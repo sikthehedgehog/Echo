@@ -77,6 +77,7 @@ RAM_PointerList: equ $1C00
 ; 68000 communication variables
 ;****************************************************************************
 
+RAM_DirectLen:      equ $1F80       ; Length of direct event stream
 RAM_Stack:          equ $1FE0       ; Where stack starts
 
 RAM_GlobalVol:      equ $1FE0       ; Global volume for all channels

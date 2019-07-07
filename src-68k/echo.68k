@@ -52,7 +52,7 @@ Echo_SendCommand:
     tst.b   (a1)                    ; Check if 2nd slot is ready
     beq.s   @Ready                  ; Too busy?
     Echo_Z80Release                   ; Let Echo continue
-    move.w  #$FF, d1                  ; Give it some time
+    move.w  #$1FF, d1                 ; Give it some time
     dbf     d1, *                       ; ...
     bra.s   @Try                      ; Try again
 
@@ -85,7 +85,7 @@ Echo_SendCommandEx:
     tst.b   (a1)                    ; Check if 2nd slot is ready
     beq.s   @Ready                  ; Too busy?
     Echo_Z80Release                   ; Let Echo continue
-    move.w  #$FF, d1                  ; Give it some time
+    move.w  #$1FF, d1                 ; Give it some time
     dbf     d1, *                       ; ...
     bra.s   @Try                      ; Try again
 
@@ -122,9 +122,10 @@ Echo_SendCommandEx:
 
 Echo_SendCommandByte:
     movem.l d1-d2/a1, -(sp)         ; Save registers
-    Echo_Z80Request                 ; We need the Z80 bus
 
 @Try:
+    Echo_Z80Request                 ; We need the Z80 bus
+
     lea     ($A01FFF), a1           ; First try the 1st slot
     tst.b   (a1)                    ; Is 1st slot available?
     beq.s   @Ready                    ; If so, move on
@@ -133,7 +134,7 @@ Echo_SendCommandByte:
     tst.b   (a1)                    ; Check if 2nd slot is ready
     beq.s   @Ready                  ; Too busy?
     Echo_Z80Release                   ; Let Echo continue
-    move.w  #$FF, d2                  ; Give it some time
+    move.w  #$1FF, d2                 ; Give it some time
     dbf     d2, *                       ; ...
     bra.s   @Try                      ; Try again
 
@@ -234,25 +235,68 @@ Echo_ResumeBGM:
 
 Echo_PlayDirect:
     Echo_Z80Request                 ; We need the Z80 bus
-    movem.l d0-d1/a0-a1, -(sp)      ; Save registers
+    movem.l d0-d1/a0-a2, -(sp)      ; Save registers
 
-    lea     ($A01F00), a1           ; Skip any pending events
-    moveq   #-1, d1
-@Skip:
-    cmp.b   (a1), d1
-    beq.s   @Load
-    addq.w  #1, a1
-    bra.s   @Skip
+@Check:
+    moveq   #0, d0                  ; Retrieve direct stream length
+    move.b  ($A01F80), d0
+    bpl.s   @StreamOk               ; Is it valid?
+@Wait:
+    Echo_Z80Release                 ; If not, let the Z80 run until it's
+    move.w  #$1FF, d0                 ; done processing the direct stream
+    dbf     d0, *                     ; ...
+    Echo_Z80Request                 ; Take over Z80 bus again
+    bra.s   @Check                  ; Retry
 
-@Load:                              ; Copy stream into the direct buffer
-    move.b  (a0)+, d0
-    move.b  d0, (a1)+
-    cmp.b   d1, d0
-    bne.s   @Load
+@StreamOk:
+    lea     ($A01F00), a1           ; Get pointer to last event in the
+    lea     (a1,d0.w), a1           ; direct stream
 
-    movem.l (sp)+, d0-d1/a0-a1      ; Restore registers
+    lea     @ArgTable(pc), a2       ; Copy stream into the direct buffer
+@LoadLoop:
+    move.b  (a0)+, d0                 ; Get byte from source stream...
+    move.b  d0, (a1)+                 ; ...and store it into direct stream
+    cmp.b   #$FF, d0                  ; Was it the STOP event?
+    beq.s   @LoadEnd                    ; If so, we're done
+    moveq   #0, d0                    ; Check how many argument bytes it has
+    move.b  (a2,d0.w), d0
+    subq.w  #1, d0                      ; Adjust for DBF
+    bmi.s   @LoadLoop                   ; No arguments?
+@LoadArgLoop:
+    move.b  (a0)+, (a1)+              ; Copy the arguments
+    dbf     d0, @LoadArgLoop
+    bra.s   @LoadLoop                 ; Keep copying
+@LoadEnd:
+
+    move.w  a1, d0                  ; Update stream length
+    subq.b  #1, d0
+    move.b  d0, ($A01F80)
+
+    movem.l (sp)+, d0-d1/a0-a2      ; Restore registers
     Echo_Z80Release                 ; We're done with the Z80 bus
     rts                             ; End of subroutine
+
+;----------------------------------------------------------------------------
+; Look-up table used to know how many bytes each event has as argument
+;----------------------------------------------------------------------------
+
+@ArgTable:
+    dc.b    1,1,1,0, 1,1,1,0, 1,1,1,1, 1,0,0,0      ; $00-$0F (key on)
+    dc.b    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0      ; $10-$1F (key off)
+    dc.b    1,1,1,0, 1,1,1,0, 1,1,1,1, 0,0,0,0      ; $20-$2F (set volume)
+    dc.b    2,2,2,0, 2,2,2,0, 2,2,2,1, 0,0,0,0      ; $30-$3F (set frequency)
+    dc.b    1,1,1,0, 1,1,1,0, 1,1,1,1, 0,0,0,0      ; $40-$4F (set instrument)
+    dc.b    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0      ; $50-$5F
+    dc.b    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0      ; $60-$6F
+    dc.b    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0      ; $70-$7F
+    dc.b    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0      ; $80-$8F
+    dc.b    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0      ; $90-$9F
+    dc.b    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0      ; $A0-$AF
+    dc.b    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0      ; $B0-$BF
+    dc.b    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0      ; $C0-$CF
+    dc.b    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0      ; $D0-$DF (quick delay)
+    dc.b    0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0      ; $E0-$EF (lock channel)
+    dc.b    1,1,1,0, 1,1,1,0, 2,2,1,1, 0,0,1,0      ; $F0-$FF (miscellaneous)
 
 ;****************************************************************************
 ; Echo_SetPCMRate
@@ -591,6 +635,7 @@ Echo_Init:
     move.b  d0, ($A01FF1)
 
     move.b  #$FF, ($A01F00)         ; No direct events to execute
+    move.b  #$00, ($A01F80)
 
     Echo_Z80Reset                   ; Now reset for real
     Echo_Z80Release                 ; Let the Z80 go!

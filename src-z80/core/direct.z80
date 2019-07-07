@@ -10,6 +10,9 @@ ProcessDirect:
     inc a
     ret z
     
+    ld a, $FF                           ; Put bogus length for direct stream
+    ld (RAM_DirectLen), a               ; so 68000 knows to wait
+    
     PollPCM
     
     ld hl, ProcessDirectEnd             ; Override $FF event
@@ -24,7 +27,10 @@ ProcessDirect:
 ProcessDirectEnd:
     ld hl, StopBGMEvent                 ; Restore $FF event
     ld (ProcessBGMEventFF+1), hl
+    
     ld a, $FF                           ; Reset the stream
     ld ($1F00), a
+    inc a
+    ld (RAM_DirectLen), a
     
     ret                                 ; Return to the main loop

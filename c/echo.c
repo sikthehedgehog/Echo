@@ -15,14 +15,14 @@ static volatile uint16_t* const z80_reset  = (uint16_t *) 0xA11200;
    { *z80_busreq = 0; }
 #define Z80_RESET() \
    { *z80_reset = 0; \
-     volatile int16_t i; for (i = 4; i >= 0; i--); \
+     volatile int16_t i; for (i = 30; i >= 0; i--); \
      *z80_reset = 0x100; }
 
 // Macro to add delays
 // Using volatile is needlessly ugly but at least portable
 // GCC is already awful at optimizing, so this isn't that bad...
 #define DELAY() \
-   { volatile int16_t i; for (i = 0xFF; i >= 0; i--); }
+   { volatile int16_t i; for (i = 0x1FF; i >= 0; i--); }
 
 // Look-up tables for echo_set_volume
 const uint8_t echo_fm_vol_table[0x40] = {
@@ -46,6 +46,27 @@ const uint8_t echo_psg_vol_table[0x40] = {
    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00
 };
 
+// Look-up table used by echo_play_direct to know how many argument bytes
+// each event has so it knows where the source stream actually ends
+static const uint8_t arg_table[] = {
+   1,1,1,0, 1,1,1,0, 1,1,1,1, 1,0,0,0,    // 00-0F (key on)
+   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,    // 10-1F (key off)
+   1,1,1,0, 1,1,1,0, 1,1,1,1, 0,0,0,0,    // 20-2F (set volume)
+   2,2,2,0, 2,2,2,0, 2,2,2,1, 0,0,0,0,    // 30-3F (set frequency)
+   1,1,1,0, 1,1,1,0, 1,1,1,1, 0,0,0,0,    // 40-4F (set instrument)
+   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,    // 50-5F
+   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,    // 60-6F
+   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,    // 70-7F
+   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,    // 80-8F
+   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,    // 90-9F
+   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,    // A0-AF
+   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,    // B0-BF
+   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,    // C0-CF
+   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,    // D0-DF (quick delay)
+   0,0,0,0, 0,0,0,0, 0,0,0,0, 0,0,0,0,    // E0-EF (lock channel)
+   1,1,1,0, 1,1,1,0, 2,2,1,1, 0,0,1,0,    // F0-FF (miscellaneous)
+};
+
 //***************************************************************************
 // echo_init
 // Initializes Echo and gets it running.
@@ -66,6 +87,7 @@ void echo_init(const void* const* list) {
    
    // Direct stream is empty yet
    z80_ram[0x1F00] = 0xFF;
+   z80_ram[0x1F80] = 0x00;
    
    // Load the instrument list manually, since thanks to linker shenanigans
    // we can't implement the list properly in ROM :/
@@ -280,16 +302,30 @@ void echo_play_direct(const void *ptr) {
    Z80_REQUEST();
    
    // Check where we can start writing events
-   volatile uint8_t *dest = &z80_ram[0x1F00];
-   while (*dest != 0xFF) dest++;
+   // If it's a bogus value we need to wait
+   uint8_t len = z80_ram[0x1F80];
+   while (len >= 0x80) {
+      Z80_RELEASE();
+      DELAY();
+      Z80_REQUEST();
+      len = z80_ram[0x1F80];
+   }
    
    // Write the events
    const uint8_t *src = (uint8_t*)(ptr);
+   volatile uint8_t *dest = &z80_ram[0x1F00 + len];
    for (;;) {
       uint8_t byte = *src++;
       *dest++ = byte;
       if (byte == 0xFF) break;
+      for (unsigned i = arg_table[byte]; i > 0; i--) {
+         *dest++ = *src++;
+         len++;
+      }
    }
+   
+   // Store new length
+   z80_ram[0x1F80] = len;
    
    // Done with the Z80
    Z80_RELEASE();
