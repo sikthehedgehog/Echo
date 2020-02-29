@@ -470,15 +470,15 @@ Echo_GetStatus:
     
     move.b  ($A01FFF), d1           ; Get next pending command (if any)
     beq.s   @QueueChecked           ; No commands left to process?
-    move.b  (a1,d1.w), d2           ; Get mask of flags to leave
-    and.b   d2, d0                  ; Remove flags that should be clear
+    move.w  (a1,d1.w), d2           ; Get mask of flags to leave
+    and.w   d2, d0                  ; Remove flags that should be clear
     move.b  @OrTable-@AndTable(a1,d1.w), d2 ; Get mask of flags to set
     or.b    d2, d0                  ; Insert flags that should be set
 
     move.b  ($A01FFB), d1           ; Repeat that with 2nd pending command
     beq.s   @QueueChecked
-    move.b  (a1,d1.w), d2
-    and.b   d2, d0
+    move.w  (a1,d1.w), d2
+    and.w   d2, d0
     move.b  @OrTable-@AndTable(a1,d1.w), d2
     or.b    d2, d0
 
@@ -495,8 +495,8 @@ Echo_GetStatus:
 ; Every byte represents a possible command.
 ;----------------------------------------------------------------------------
 
-@AndTable:  dc.b $FF,$FF, $FF,$FE,$FF,$FD, $FF,$FF,$FF
-@OrTable:   dc.b $00,$00, $01,$00,$02,$00, $00,$00,$00
+@AndTable:  dc.w $FFFF,$FFFF,$FFFF,$FFFE,$FFFF,$FFFD,$FFFF,$FFFF,$FFFF
+@OrTable:   dc.b $00,$00,$01,$00,$02,$00,$00,$00,$00
             even
 
 ;****************************************************************************
