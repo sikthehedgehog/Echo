@@ -316,7 +316,7 @@ void echo_play_direct(const void *ptr) {
    volatile uint8_t *dest = &z80_ram[0x1F00 + len];
    for (;;) {
       uint8_t byte = *src++;
-      *dest++ = byte;
+      *dest++ = byte; len++;
       if (byte == 0xFF) break;
       for (unsigned i = arg_table[byte]; i > 0; i--) {
          *dest++ = *src++;
@@ -426,11 +426,11 @@ uint16_t echo_get_status(void) {
    // Look-up tables used to work around the fact that playing/stopping
    // won't set the status immediately (only when Echo processes the command)
    // and this can catch programmers off guard
-   static const uint8_t and_flags[] = {
-      0xFF,0xFF, 0xFF,0xFE,0xFF,0xFD, 0xFF,0xFF,0xFF
+   static const uint16_t and_flags[] = {
+      0xFFFF,0xFFFF, 0xFFFF,0xFFFE,0xFFFF,0xFFFD, 0xFFFF,0xFFFF,0xFFFF
    };
-   static const uint8_t or_flags[] = {
-      0x00,0x00, 0x01,0x00,0x02,0x00, 0x00,0x00,0x00
+   static const uint16_t or_flags[] = {
+      0x0000,0x0000, 0x0001,0x0000,0x0002,0x0000, 0x0000,0x0000,0x0000
    };
    
    // We need access to the Z80
