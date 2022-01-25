@@ -26,11 +26,12 @@ Echo is available under the zlib license. Please see the LICENSE file for
 details. All files here as-is are made available under that license unless
 explicitly stated otherwise.
 
-Echo official "site" (currently redirects to the repo):
-http://echo.mdscene.net/
-
 mdtools repo (includes several tools for use with Echo):
-http://tools.mdscene.net/
+https://github.com/sikthehedgehog/mdtools
+
+Converters from Deflemask to Echo's format:
+https://github.com/BigEvilCorporation/dmf2esf
+https://github.com/minerscale/dmf2esf-2.0
 
 Some more tools from Oerg866 (XM to ESF converter and ESF optimizer):
 https://github.com/oerg866/xm2esf
