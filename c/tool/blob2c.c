@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
    }
 
    // Start the table
-   fputs("static uint8_t echo_blob[] = {", file);
+   fputs("static const uint8_t echo_blob[] = {", file);
 
    // Output the blob data as a C array
    // Pretty formatting too!
