@@ -120,6 +120,13 @@ UpdatePSG:
     
     ld a, b                     ; Compute resulting semitone
     add c
+    cp 72*2                     ; Keep it inside the frequency table:
+    jr c, .shiftok              ; shifting past the top gives $90..$A6,
+    cp $C0                      ; past the bottom $E8..$FE
+    ld a, 71*2
+    jr c, .shiftok
+    xor a
+.shiftok:
     
     ex de, hl                   ; Get corresponding frequency
     ld h, PSGFreqTable>>8
